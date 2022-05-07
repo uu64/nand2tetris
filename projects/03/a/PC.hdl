@@ -24,6 +24,5 @@ CHIP PC {
     // Mux16(a=incout, b=in, sel=load, out=loadout);
     // Mux16(a=loadout, b=false, sel=reset, out=rin);
 
-    Or8Way(in[0]=load, in[1]=inc, in[2]=reset, in[3..7]=true, out=nextload);
-    Register(in=rin, load=nextload, out=current, out=out);
+    Register(in=rin, load=true, out=current, out=out);
 }
