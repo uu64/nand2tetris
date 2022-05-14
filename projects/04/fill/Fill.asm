@@ -14,6 +14,10 @@
 // Put your code here.
 
 (MAIN)
+@24576
+D=M
+@CLEAR
+D;JEQ
 @FILL
 0;JMP
 
