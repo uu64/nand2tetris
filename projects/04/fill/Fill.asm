@@ -20,7 +20,7 @@
     M=0
 
     // check key pressed or not
-    @24576
+    @KBD
     D=M
     @key_pressed
     M=D
