@@ -53,19 +53,14 @@ CHIP CPU {
     // ALU
     Mux16(a=outA, b=inM, sel=instruction[12], out=inAluY);
     ALU(x=outD, y=inAluY, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outALU, out=outM, zr=zr, ng=ng);
+    And(a=isC, b=instruction[3], out=writeM);
 
     // PC
-    Not(in=zr, out=notZr);
-    Not(in=ng, out=notNg);
-    And(a=instruction[2], b=ng, out=cond0);
-    And(a=instruction[1], b=zr, out=cond1);
-    And(a=notZr, b=notNg, out=tmp0);
-    And(a=instruction[0], b=tmp0, out=cond2);
-
-    Or8Way(in[0]=cond0, in[1]=cond1, in[2]=cond2, in[3..7]=false, out=tmp1);
-    And(a=tmp1, b=isC, out=loadPC);
+    DMux4Way(in=isC, sel[1]=zr, sel[0]=ng, a=j3, b=j1, c=j2);
+    And(a=instruction[2], b=j1, out=cond0);
+    And(a=instruction[1], b=j2, out=cond1);
+    And(a=instruction[0], b=j3, out=cond2);
+    Or8Way(in[0]=cond0, in[1]=cond1, in[2]=cond2, in[3..7]=false, out=loadPC);
     Not(in=loadPC, out=pcInc);
     PC(in=outA, load=loadPC, inc=pcInc, reset=reset, out[0..14]=pc);
-
-    And(a=isC, b=instruction[3], out=writeM);
 }
