@@ -44,25 +44,28 @@ CHIP CPU {
 
     // ARegister
     Or(a=isA, b=instruction[5], out=aLoad);
-    Mux16(a=aluOut, b=instruction, sel=isA, out=inA);
-    ARegister(in=inA, load=aLoad, out=aOut, out[0..14]=addressM);
+    Mux16(a=outALU, b=instruction, sel=isA, out=inA);
+    ARegister(in=inA, load=aLoad, out=outA, out[0..14]=addressM);
 
     // DRegister
-    DRegister(in=aluOut, load=instruction[4], out=dOut);
+    DRegister(in=outALU, load=instruction[4], out=outD);
 
     // ALU
-    Mux16(a=aOut, b=inM, sel=instruction[12], out=inAluY);
-    ALU(x=dOut, y=inAluY, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut, zr=zr, ng=ng);
+    Mux16(a=outA, b=inM, sel=instruction[12], out=inAluY);
+    ALU(x=outD, y=inAluY, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outALU, out=outM, zr=zr, ng=ng);
 
     // PC
-    And(a=instruction[2], b=ng, out=cond0);
-    And(a=instruction[1], b=zr, out=cond1);
     Not(in=zr, out=notZr);
     Not(in=ng, out=notNg);
-    And(a=instruction[0], b=notZr, out=tmp0);
-    And(a=tmp0, b=notNg, out=cond2);
-    Or(a=cond0, b=cond1, out=tmp1);
-    Or(a=tmp1, b=cond2, out=pcLoad);
-    Not(in=pcLoad, out=pcInc);
-    PC(in=aOut, load=pcLoad, inc=pcInc, reset=reset, out[0..14]=pc);
+    And(a=instruction[2], b=ng, out=cond0);
+    And(a=instruction[1], b=zr, out=cond1);
+    And(a=notZr, b=notNg, out=tmp0);
+    And(a=instruction[0], b=tmp0, out=cond2);
+
+    Or8Way(in[0]=cond0, in[1]=cond1, in[2]=cond2, in[3..7]=false, out=tmp1);
+    And(a=tmp1, b=isC, out=loadPC);
+    Not(in=loadPC, out=pcInc);
+    PC(in=outA, load=loadPC, inc=pcInc, reset=reset, out[0..14]=pc);
+
+    And(a=isC, b=instruction[3], out=writeM);
 }
