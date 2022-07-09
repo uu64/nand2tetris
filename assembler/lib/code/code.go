@@ -55,14 +55,14 @@ var jumpMap = map[string][]byte{
 	"JMP":  []byte("111"),
 }
 
-func Dest(mnemonic []byte) []byte {
-	return destMap[string(mnemonic)]
+func Dest(mnemonic string) []byte {
+	return destMap[mnemonic]
 }
 
-func Comp(mnemonic []byte) []byte {
-	return compMap[string(mnemonic)]
+func Comp(mnemonic string) []byte {
+	return compMap[mnemonic]
 }
 
-func Jump(mnemonic []byte) []byte {
-	return jumpMap[string(mnemonic)]
+func Jump(mnemonic string) []byte {
+	return jumpMap[mnemonic]
 }

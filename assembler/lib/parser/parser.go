@@ -9,20 +9,25 @@ import (
 	"regexp"
 )
 
-type Command int
+type Cmd int
 
 const (
-	A_COMMAND Command = iota
-	C_COMMAND
-	L_COMMAND
+	UNKNOWN Cmd = iota
+	COMMENT
+	EMPTY
+	A_CMD
+	C_CMD
+	L_CMD
 )
-
-var aCommandPattern = regexp.MustCompile(`^@(?P<value>\w+|[0-9]+)$`)
 
 type Parser struct {
 	scanner         *bufio.Scanner
 	hasMoreCommands bool
-	currentCmd      Command
+	currentCmd      Cmd
+	symbol          []byte
+	dest            []byte
+	comp            []byte
+	jump            []byte
 }
 
 func New(f *os.File) *Parser {
@@ -47,47 +52,66 @@ func (p *Parser) Advance() {
 	p.parse(p.scanner.Bytes())
 }
 
-func (p *Parser) CommandType() Command {
+func (p *Parser) CommandType() Cmd {
 	return p.currentCmd
 }
 
 func (p *Parser) Symbol() string {
-	return string(p.scanner.Bytes())
+	return string(p.symbol)
 }
 
-func (p *Parser) Dest() string { return "" }
+func (p *Parser) Dest() string {
+	return string(p.dest)
+}
 
-func (p *Parser) Comp() string { return "" }
+func (p *Parser) Comp() string {
+	return string(p.comp)
+}
 
-func (p *Parser) Jump() string { return "" }
+func (p *Parser) Jump() string {
+	return string(p.jump)
+}
+
+var aCmdPtn = regexp.MustCompile(`^@(?P<symbol>\w+|[0-9]+)`)
+
+var cCmdPtn = regexp.MustCompile(`^(?P<dest>null|[AMD]+)?=?(?P<comp>[AMD01&|\-\!]+);?(?P<jump>null|JGT|JEQ|JGE|JLT+JNE+JLE|JMP)?`)
 
 func (p *Parser) parse(row []byte) {
 	b := bytes.TrimSpace(row)
 
 	// skip empty row
 	if len(b) == 0 {
+		p.currentCmd = EMPTY
 		return
 	}
 
 	// skip comment
 	if bytes.HasPrefix(b, []byte("//")) {
+		p.currentCmd = COMMENT
 		return
 	}
 
 	fmt.Println(string(b))
 	switch b[0] {
 	case '@':
-		matches := aCommandPattern.FindSubmatch(b)
-		fmt.Println(string(matches[aCommandPattern.SubexpIndex("value")]))
-		if aCommandPattern.Match(b) {
-			fmt.Println("match")
+		// A command
+		matches := aCmdPtn.FindSubmatch(b)
+		if len(matches) > 0 {
+			p.symbol = matches[aCmdPtn.SubexpIndex("symbol")]
 		}
-		p.currentCmd = A_COMMAND
+		p.currentCmd = A_CMD
 	case '(':
 		// L command
-		p.currentCmd = L_COMMAND
+		p.currentCmd = L_CMD
+		fmt.Println("L command")
 	default:
-		fmt.Println("C command")
-		p.currentCmd = C_COMMAND
+		// C command
+		matches := cCmdPtn.FindSubmatch(b)
+		if len(matches) > 0 {
+			p.dest = matches[cCmdPtn.SubexpIndex("dest")]
+			p.comp = matches[cCmdPtn.SubexpIndex("comp")]
+			p.jump = matches[cCmdPtn.SubexpIndex("jump")]
+		}
+		p.currentCmd = C_CMD
 	}
 }
