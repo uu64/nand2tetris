@@ -74,7 +74,7 @@ func (p *Parser) Jump() string {
 
 var aCmdPtn = regexp.MustCompile(`^@(?P<symbol>\w+|[0-9]+)`)
 
-var cCmdPtn = regexp.MustCompile(`^(?P<dest>null|[AMD]+)?=?(?P<comp>[AMD01&|\-\!]+);?(?P<jump>null|JGT|JEQ|JGE|JLT+JNE+JLE|JMP)?`)
+var cCmdPtn = regexp.MustCompile(`^(?P<dest>null|[AMD]+)?=?(?P<comp>[AMD01&|+\-\!]+);?(?P<jump>null|JGT|JEQ|JGE|JLT|JNE|JLE|JMP)?`)
 
 func (p *Parser) parse(row []byte) {
 	b := bytes.TrimSpace(row)
@@ -91,7 +91,6 @@ func (p *Parser) parse(row []byte) {
 		return
 	}
 
-	fmt.Println(string(b))
 	switch b[0] {
 	case '@':
 		// A command
