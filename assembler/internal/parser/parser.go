@@ -3,7 +3,6 @@ package parser
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"log"
 	"regexp"
@@ -73,8 +72,8 @@ func (p *Parser) Jump() string {
 }
 
 var aCmdPtn = regexp.MustCompile(`^@(?P<symbol>[0-9A-Za-z_:\.\$]+)`)
-
 var cCmdPtn = regexp.MustCompile(`^(?P<dest>null|[AMD]+)?=?(?P<comp>[AMD01&|+\-\!]+);?(?P<jump>null|JGT|JEQ|JGE|JLT|JNE|JLE|JMP)?`)
+var lCmdPtn = regexp.MustCompile(`^@(\(?P<symbol>[0-9A-Za-z_:\.\$]+\))`)
 
 func (p *Parser) parse(row []byte) {
 	b := bytes.TrimSpace(row)
@@ -101,8 +100,11 @@ func (p *Parser) parse(row []byte) {
 		p.currentCmd = A_CMD
 	case '(':
 		// L command
+		matches := lCmdPtn.FindSubmatch(b)
+		if len(matches) > 0 {
+			// TODO
+		}
 		p.currentCmd = L_CMD
-		fmt.Println("L command")
 	default:
 		// C command
 		matches := cCmdPtn.FindSubmatch(b)
