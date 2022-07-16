@@ -19,6 +19,10 @@ func New(asmfilePath string) *Cmd {
 	return &Cmd{asmfilePath}
 }
 
+func (cmd *Cmd) scanSymbol() error {
+	return nil
+}
+
 func (cmd *Cmd) parse() (*bytes.Buffer, error) {
 	// create parser
 	f, err := os.Open(cmd.asmfilePath)
@@ -76,13 +80,15 @@ func (cmd *Cmd) write(b []byte) error {
 }
 
 func (cmd *Cmd) Run() (err error) {
-	// parse
+	if err = cmd.scanSymbol(); err != nil {
+		return err
+	}
+
 	buf, err := cmd.parse()
 	if err != nil {
 		return err
 	}
 
-	// write
 	err = cmd.write(buf.Bytes())
 	if err != nil {
 		return err
