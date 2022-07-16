@@ -23,8 +23,7 @@ func main() {
 		return
 	}
 	asmfile := os.Args[1]
-	ext := filepath.Ext(asmfile)
-	hackfile := fmt.Sprintf("%s.hack", asmfile[0:len(asmfile)-len(ext)])
+	hackfile := fmt.Sprintf("%s.hack", asmfile[0:len(asmfile)-len(filepath.Ext(asmfile))])
 
 	// create parser
 	in, err := os.Open(asmfile)
