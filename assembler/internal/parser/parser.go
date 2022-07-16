@@ -72,7 +72,7 @@ func (p *Parser) Jump() string {
 	return string(p.jump)
 }
 
-var aCmdPtn = regexp.MustCompile(`^@(?P<symbol>\w+|[0-9]+)`)
+var aCmdPtn = regexp.MustCompile(`^@(?P<symbol>[0-9A-Za-z_:\.\$]+)`)
 
 var cCmdPtn = regexp.MustCompile(`^(?P<dest>null|[AMD]+)?=?(?P<comp>[AMD01&|+\-\!]+);?(?P<jump>null|JGT|JEQ|JGE|JLT|JNE|JLE|JMP)?`)
 
