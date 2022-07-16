@@ -16,7 +16,7 @@ test() {
 }
 
 test "$(dirname "${0}")" "add" "Add"
-# test "$(dirname "${0}")" "max" "Max"
+test "$(dirname "${0}")" "max" "Max"
 test "$(dirname "${0}")" "max" "MaxL"
-# test "$(dirname "${0}")" "pong" "Pong"
+test "$(dirname "${0}")" "pong" "Pong"
 test "$(dirname "${0}")" "pong" "PongL"
