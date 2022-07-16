@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"log"
-	"os"
 	"regexp"
 )
 
@@ -30,7 +30,7 @@ type Parser struct {
 	jump            []byte
 }
 
-func New(f *os.File) *Parser {
+func New(f io.Reader) *Parser {
 	s := bufio.NewScanner(f)
 	return &Parser{scanner: s, hasMoreCommands: true}
 }
