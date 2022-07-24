@@ -9,17 +9,42 @@ import (
 
 	"github.com/uu64/nand2tetris/assembler/internal/code"
 	"github.com/uu64/nand2tetris/assembler/internal/parser"
+	"github.com/uu64/nand2tetris/assembler/internal/symboltable"
 )
 
 type Cmd struct {
 	asmfilePath string
+	symbolTable *symboltable.SymbolTable
 }
 
 func New(asmfilePath string) *Cmd {
-	return &Cmd{asmfilePath}
+	return &Cmd{
+		asmfilePath: asmfilePath,
+		symbolTable: symboltable.New(),
+	}
 }
 
 func (cmd *Cmd) scanSymbol() error {
+	// create parser
+	f, err := os.Open(cmd.asmfilePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	p := parser.New(f)
+
+	// scan
+	romAddr := 0
+	for p.HasMoreCommands() {
+		p.Advance()
+		switch p.CommandType() {
+		case parser.A_CMD, parser.C_CMD:
+			romAddr += 1
+		case parser.L_CMD:
+			cmd.symbolTable.AddEntry(p.Symbol(), romAddr)
+		}
+	}
+
 	return nil
 }
 
@@ -34,15 +59,23 @@ func (cmd *Cmd) parse() (*bytes.Buffer, error) {
 
 	// parse
 	buf := bytes.NewBuffer([]byte{})
+	ramAddr := 16
 	for p.HasMoreCommands() {
 		p.Advance()
 		switch p.CommandType() {
 		case parser.A_CMD:
-			s, err := strconv.Atoi(p.Symbol())
+			symbol := p.Symbol()
+			addr, err := strconv.Atoi(symbol)
 			if err != nil {
-				return buf, err
+				if cmd.symbolTable.Contains(symbol) {
+					addr = cmd.symbolTable.GetAddress(symbol)
+				} else {
+					cmd.symbolTable.AddEntry(symbol, ramAddr)
+					addr = ramAddr
+					ramAddr += 1
+				}
 			}
-			fmt.Fprintf(buf, "%016b\n", s)
+			fmt.Fprintf(buf, "%016b\n", addr)
 		case parser.C_CMD:
 			comp := code.Comp(p.Comp())
 			dest := code.Dest(p.Dest())

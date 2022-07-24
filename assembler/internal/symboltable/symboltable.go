@@ -1,4 +1,4 @@
-package symbol
+package symboltable
 
 type SymbolTable struct {
 	table map[string]int
