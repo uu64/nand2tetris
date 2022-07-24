@@ -82,6 +82,7 @@ func (cmd *Cmd) parse() (*bytes.Buffer, error) {
 			jump := code.Jump(p.Jump())
 			fmt.Fprintf(buf, "111%07s%03s%03s\n", comp, dest, jump)
 		case parser.L_CMD:
+			// do nothing
 		}
 	}
 
