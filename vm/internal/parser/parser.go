@@ -30,8 +30,8 @@ type Parser struct {
 	scanner         *bufio.Scanner
 	hasMoreCommands bool
 	currentCmd      Cmd
-	arg1            []byte
-	arg2            []byte
+	arg1            string
+	arg2            int
 }
 
 func New(f io.Reader) *Parser {
@@ -61,26 +61,18 @@ func (p *Parser) CommandType() Cmd {
 }
 
 func (p *Parser) Arg1() string {
-	return string(p.arg1)
+	return p.arg1
 }
 
-func (p *Parser) Arg2() (int, error) {
-	return strconv.Atoi(string(p.arg2))
+func (p *Parser) Arg2() int {
+	return p.arg2
 }
 
-var regexpPush = regexp.MustCompile(`^push\s+(?P<arg1>argument|local|static|constant|this|that|pointer|temp)\s+(?P<arg2>[0-9]+)`)
-var regexpPop = regexp.MustCompile(`^pop\s+(?P<arg1>argument|local|static|constant|this|that|pointer|temp)\s+(?P<arg2>[0-9]+)`)
-
-var regexpLabel = regexp.MustCompile(`^label\s+(?P<arg1>[0-9A-Za-z_:\.]+)`)
-var regexpGoto = regexp.MustCompile(`^goto\s+(?P<arg1>[0-9A-Za-z_:\.]+)`)
-var regexpIf = regexp.MustCompile(`^if-goto\s+(?P<arg1>[0-9A-Za-z_:\.]+)`)
-
-var regexpFunc = regexp.MustCompile(`^function\s+(?P<arg1>[0-9A-Za-z_:\.]+)\s+(?P<arg2>[0-9]+)`)
-var regexpCall = regexp.MustCompile(`^call\s+(?P<arg1>[0-9A-Za-z_:\.]+)\s+(?P<arg2>[0-9]+)`)
+var regexpCmd = regexp.MustCompile(`^(?P<cmd>[a-z\-]+)\s+(?P<arg1>[0-9A-Za-z_:\.]+)\s+(?P<arg2>[0-9]+)`)
 
 func (p *Parser) parse(row []byte) error {
-	p.arg1 = nil
-	p.arg2 = nil
+	p.arg1 = ""
+	p.arg2 = 0
 
 	b := bytes.TrimSpace(row)
 
@@ -96,74 +88,50 @@ func (p *Parser) parse(row []byte) error {
 		return nil
 	}
 
-	switch {
-	// TODO: arithmetric
-	case bytes.HasPrefix(b, []byte("push")):
-		matches := regexpPush.FindSubmatch(b)
-		if len(matches) == 0 {
-			return fmt.Errorf("invalid format: %s", string(b))
-		}
-
-		p.currentCmd = C_PUSH
-		p.arg1 = matches[regexpPush.SubexpIndex("arg1")]
-		p.arg2 = matches[regexpPush.SubexpIndex("arg2")]
-	case bytes.HasPrefix(b, []byte("pop")):
-		matches := regexpPop.FindSubmatch(b)
-		if len(matches) == 0 {
-			return fmt.Errorf("invalid format: %s", string(b))
-		}
-
-		p.currentCmd = C_POP
-		p.arg1 = matches[regexpPop.SubexpIndex("arg1")]
-		p.arg2 = matches[regexpPop.SubexpIndex("arg2")]
-	case bytes.HasPrefix(b, []byte("label")):
-		matches := regexpLabel.FindSubmatch(b)
-		if len(matches) == 0 {
-			return fmt.Errorf("invalid format: %s", string(b))
-		}
-
-		p.currentCmd = C_LABEL
-		p.arg1 = matches[regexpLabel.SubexpIndex("arg1")]
-	case bytes.HasPrefix(b, []byte("goto")):
-		matches := regexpGoto.FindSubmatch(b)
-		if len(matches) == 0 {
-			return fmt.Errorf("invalid format: %s", string(b))
-		}
-
-		p.currentCmd = C_GOTO
-		p.arg1 = matches[regexpGoto.SubexpIndex("arg1")]
-	case bytes.HasPrefix(b, []byte("if-goto")):
-		matches := regexpIf.FindSubmatch(b)
-		if len(matches) == 0 {
-			return fmt.Errorf("invalid format: %s", string(b))
-		}
-
-		p.currentCmd = C_IF
-		p.arg1 = matches[regexpIf.SubexpIndex("arg1")]
-	case bytes.HasPrefix(b, []byte("function")):
-		matches := regexpFunc.FindSubmatch(b)
-		if len(matches) == 0 {
-			return fmt.Errorf("invalid format: %s", string(b))
-		}
-
-		p.currentCmd = C_FUNCTION
-		p.arg1 = matches[regexpCall.SubexpIndex("arg1")]
-		p.arg2 = matches[regexpCall.SubexpIndex("arg2")]
-	case bytes.HasPrefix(b, []byte("call")):
-		matches := regexpCall.FindSubmatch(b)
-		if len(matches) == 0 {
-			return fmt.Errorf("invalid format: %s", string(b))
-		}
-
-		p.currentCmd = C_CALL
-		p.arg1 = matches[regexpCall.SubexpIndex("arg1")]
-		p.arg2 = matches[regexpCall.SubexpIndex("arg2")]
-	case bytes.Equal(b, []byte("return")):
-		p.currentCmd = C_RETURN
-		p.arg1 = nil
-		p.arg2 = nil
-	default:
-		return fmt.Errorf("unknown command: %s", string(b))
+	// parse
+	matches := regexpCmd.FindSubmatch(b)
+	if len(matches) == 0 {
+		return fmt.Errorf("invalid format: %s", string(b))
 	}
+
+	cmd := matches[regexpCmd.SubexpIndex("cmd")]
+	arg1 := matches[regexpCmd.SubexpIndex("arg1")]
+	arg2 := matches[regexpCmd.SubexpIndex("arg2")]
+
+	switch string(cmd) {
+	case "add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not":
+		p.currentCmd = C_ARITHMETRIC
+	case "return":
+		p.currentCmd = C_RETURN
+	case "label":
+		p.currentCmd = C_LABEL
+		p.arg1 = string(arg1)
+	case "goto":
+		p.currentCmd = C_GOTO
+		p.arg1 = string(arg1)
+	case "if-goto":
+		p.currentCmd = C_IF
+		p.arg1 = string(arg1)
+	// ignore the error because arg2 is ensured that be a numeric by regexp
+	case "function":
+		p.currentCmd = C_FUNCTION
+		p.arg1 = string(arg1)
+		p.arg2, _ = strconv.Atoi(string(arg2))
+	case "call":
+		p.currentCmd = C_CALL
+		p.arg1 = string(arg1)
+		p.arg2, _ = strconv.Atoi(string(arg2))
+	case "push":
+		p.currentCmd = C_PUSH
+		p.arg1 = string(arg1)
+		p.arg2, _ = strconv.Atoi(string(arg2))
+	case "pop":
+		p.currentCmd = C_POP
+		p.arg1 = string(arg1)
+		p.arg2, _ = strconv.Atoi(string(arg2))
+	default:
+		return fmt.Errorf("unknown command: %s %s %s", string(cmd), string(arg1), string(arg2))
+	}
+
 	return nil
 }
