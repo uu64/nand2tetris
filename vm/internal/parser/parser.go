@@ -43,7 +43,7 @@ func (p *Parser) HasMoreCommands() bool {
 	return p.hasMoreCommands
 }
 
-func (p *Parser) Advance() {
+func (p *Parser) Advance() error {
 	if !p.scanner.Scan() {
 		err := p.scanner.Err()
 		// io.EOF
@@ -53,7 +53,7 @@ func (p *Parser) Advance() {
 			log.Fatal("Parser.Advance: %w", err)
 		}
 	}
-	p.parse(p.scanner.Bytes())
+	return p.parse(p.scanner.Bytes())
 }
 
 func (p *Parser) CommandType() Cmd {
@@ -68,7 +68,7 @@ func (p *Parser) Arg2() int {
 	return p.arg2
 }
 
-var regexpCmd = regexp.MustCompile(`^(?P<cmd>[a-z\-]+)\s+(?P<arg1>[0-9A-Za-z_:\.]+)\s+(?P<arg2>[0-9]+)`)
+var regexpCmd = regexp.MustCompile(`^(?P<cmd>[a-z\-]+)\s*(?P<arg1>[0-9A-Za-z_:\.]+)*\s*(?P<arg2>[0-9]+)*`)
 
 func (p *Parser) parse(row []byte) error {
 	p.arg1 = ""
@@ -101,6 +101,7 @@ func (p *Parser) parse(row []byte) error {
 	switch string(cmd) {
 	case "add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not":
 		p.currentCmd = C_ARITHMETRIC
+		p.arg1 = string(cmd)
 	case "return":
 		p.currentCmd = C_RETURN
 	case "label":
