@@ -24,5 +24,5 @@ M=M+1
 // pop from a constant segment.
 // M is set to the return value.
 const PopConstant = `@SP
-AM=M-1
+M=M-1
 `
