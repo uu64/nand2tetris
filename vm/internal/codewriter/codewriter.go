@@ -2,10 +2,8 @@ package codewriter
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 
-	"github.com/uu64/nand2tetris/vm/internal/codewriter/code"
 	"github.com/uu64/nand2tetris/vm/internal/parser"
 )
 
@@ -33,7 +31,23 @@ func (cw *CodeWriter) Close() error {
 func (cw *CodeWriter) WriteArithmetic(cmd string) {
 	switch cmd {
 	case "add":
-		cw.writer.WriteString(code.Add)
+		cw.writer.WriteString(add())
+	case "sub":
+		cw.writer.WriteString(sub())
+	case "neg":
+		cw.writer.WriteString(neg())
+	case "eq":
+		cw.writer.WriteString(eq())
+	case "gt":
+		cw.writer.WriteString(gt())
+	case "lt":
+		cw.writer.WriteString(lt())
+	case "and":
+		cw.writer.WriteString(and())
+	case "or":
+		cw.writer.WriteString(or())
+	case "not":
+		cw.writer.WriteString(not())
 	default:
 		// do notching
 	}
@@ -53,7 +67,7 @@ func (cw *CodeWriter) WritePushPop(cmd parser.Cmd, segment string, index int) {
 func (cw *CodeWriter) writePush(cmd parser.Cmd, segment string, index int) {
 	switch segment {
 	case "constant":
-		cw.writer.WriteString(fmt.Sprintf(code.PushConstant, index))
+		cw.writer.WriteString(pushConstant(index))
 	default:
 		// do nothing
 	}
@@ -62,7 +76,7 @@ func (cw *CodeWriter) writePush(cmd parser.Cmd, segment string, index int) {
 func (cw *CodeWriter) writePop(cmd parser.Cmd, segment string, index int) {
 	switch segment {
 	case "constant":
-		cw.writer.WriteString(code.PopConstant)
+		cw.writer.WriteString(popConstant())
 	default:
 		// do nothing
 	}
