@@ -8,5 +8,6 @@ test() {
 }
 
 test "StackArithmetic" "SimpleAdd"
-
 test "StackArithmetic" "StackTest"
+
+test "MemoryAccess" "BasicTest"

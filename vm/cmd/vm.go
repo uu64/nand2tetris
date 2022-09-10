@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"log"
 	"os"
 
 	"github.com/uu64/nand2tetris/vm/internal/codewriter"
@@ -42,15 +43,19 @@ func (cmd *Cmd) Run() (err error) {
 			return err
 		}
 
+		var err error
 		switch p.CommandType() {
 		case parser.C_ARITHMETRIC:
-			cw.WriteArithmetic(p.Arg1())
+			err = cw.WriteArithmetic(p.Arg1())
 		case parser.C_PUSH:
-			cw.WritePushPop(parser.C_PUSH, p.Arg1(), p.Arg2())
+			err = cw.WritePushPop(parser.C_PUSH, p.Arg1(), p.Arg2())
 		case parser.C_POP:
-			cw.WritePushPop(parser.C_POP, p.Arg1(), p.Arg2())
+			err = cw.WritePushPop(parser.C_POP, p.Arg1(), p.Arg2())
 		default:
 			// do nothing
+		}
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 

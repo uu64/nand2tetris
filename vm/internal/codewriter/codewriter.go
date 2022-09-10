@@ -2,6 +2,7 @@ package codewriter
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 
 	"github.com/uu64/nand2tetris/vm/internal/parser"
@@ -28,7 +29,7 @@ func (cw *CodeWriter) Close() error {
 	return nil
 }
 
-func (cw *CodeWriter) WriteArithmetic(cmd string) {
+func (cw *CodeWriter) WriteArithmetic(cmd string) error {
 	switch cmd {
 	case "add":
 		cw.writer.WriteString(add())
@@ -49,35 +50,38 @@ func (cw *CodeWriter) WriteArithmetic(cmd string) {
 	case "not":
 		cw.writer.WriteString(not())
 	default:
-		// do notching
+		return fmt.Errorf("undefined operator: %s", cmd)
 	}
+	return nil
 }
 
-func (cw *CodeWriter) WritePushPop(cmd parser.Cmd, segment string, index int) {
+func (cw *CodeWriter) WritePushPop(cmd parser.Cmd, segment string, index int) error {
 	switch cmd {
 	case parser.C_PUSH:
-		cw.writePush(cmd, segment, index)
+		return cw.writePush(cmd, segment, index)
 	case parser.C_POP:
-		cw.writePop(cmd, segment, index)
+		return cw.writePop(cmd, segment, index)
 	default:
-		// do nothing
+		return fmt.Errorf("invalid operation: %d", cmd)
 	}
 }
 
-func (cw *CodeWriter) writePush(cmd parser.Cmd, segment string, index int) {
+func (cw *CodeWriter) writePush(cmd parser.Cmd, segment string, index int) error {
 	switch segment {
 	case "constant":
 		cw.writer.WriteString(pushConstant(index))
 	default:
-		// do nothing
+		return fmt.Errorf("undefined segment: %s", segment)
 	}
+	return nil
 }
 
-func (cw *CodeWriter) writePop(cmd parser.Cmd, segment string, index int) {
+func (cw *CodeWriter) writePop(cmd parser.Cmd, segment string, index int) error {
 	switch segment {
 	case "constant":
 		cw.writer.WriteString(popConstant())
 	default:
-		// do nothing
+		return fmt.Errorf("undefined segment: %s", segment)
 	}
+	return nil
 }
