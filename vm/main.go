@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/uu64/nand2tetris/vm/cmd"
 )
@@ -19,13 +18,10 @@ func main() {
 		return
 	}
 
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-
-	cmd := cmd.New(os.Args[1], fmt.Sprintf("%s/out.asm", filepath.Dir(ex)))
+	outputFilePath := fmt.Sprintf("%s.asm", os.Args[1][0:len(os.Args[1])-len(".vm")])
+	cmd := cmd.New(os.Args[1], outputFilePath)
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("output: %s\n", outputFilePath)
 }
