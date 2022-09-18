@@ -10,22 +10,6 @@ import (
 	"strconv"
 )
 
-type Cmd int
-
-const (
-	COMMENT Cmd = iota
-	EMPTY
-	C_ARITHMETRIC
-	C_PUSH
-	C_POP
-	C_LABEL
-	C_GOTO
-	C_IF
-	C_FUNCTION
-	C_CALL
-	C_RETURN
-)
-
 type Parser struct {
 	scanner         *bufio.Scanner
 	hasMoreCommands bool

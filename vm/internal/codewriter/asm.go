@@ -186,27 +186,3 @@ M=M+1
 func not() string {
 	return notTmpl
 }
-
-// push the value to a constant segment.
-const pushConstantTmpl = `@%d
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
-`
-
-func pushConstant(value int) string {
-	return fmt.Sprintf(pushConstantTmpl, value)
-}
-
-// pop from a constant segment.
-// M is set to the return value.
-const popConstantTmpl = `@SP
-AM=M-1
-`
-
-func popConstant() string {
-	return popConstantTmpl
-}

@@ -2,6 +2,7 @@ package codewriter
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 
@@ -66,22 +67,90 @@ func (cw *CodeWriter) WritePushPop(cmd parser.Cmd, segment string, index int) er
 	}
 }
 
+var memSegMap = map[string]string{
+	parser.SEG_LOCAL: "LCL",
+	parser.SEG_ARG:   "ARG",
+	parser.SEG_THIS:  "THIS",
+	parser.SEG_THAT:  "THAT",
+	// base address
+	parser.SEG_PTR:  "3",
+	parser.SEG_TEMP: "5",
+}
+
 func (cw *CodeWriter) writePush(cmd parser.Cmd, segment string, index int) error {
+	var b bytes.Buffer
+
 	switch segment {
-	case "constant":
-		cw.writer.WriteString(pushConstant(index))
+	case parser.SEG_CONST:
+		b.WriteString(fmt.Sprintf("@%d\n", index))
+		b.WriteString("D=A\n")
+	case parser.SEG_LOCAL, parser.SEG_ARG, parser.SEG_THIS, parser.SEG_THAT:
+		b.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
+		b.WriteString("D=M\n")
+		b.WriteString(fmt.Sprintf("@%d\n", index))
+		b.WriteString("A=D+A\n")
+		b.WriteString("D=M\n")
+	case parser.SEG_PTR, parser.SEG_TEMP:
+		b.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
+		b.WriteString("D=A\n")
+		b.WriteString(fmt.Sprintf("@%d\n", index))
+		b.WriteString("A=D+A\n")
+		b.WriteString("D=M\n")
 	default:
 		return fmt.Errorf("undefined segment: %s", segment)
 	}
+
+	b.WriteString("@SP\n")
+	b.WriteString("A=M\n")
+	b.WriteString("M=D\n")
+	b.WriteString("@SP\n")
+	b.WriteString("M=M+1\n")
+
+	cw.writer.WriteString(b.String())
 	return nil
 }
 
 func (cw *CodeWriter) writePop(cmd parser.Cmd, segment string, index int) error {
+	var b bytes.Buffer
+
+	if segment == parser.SEG_CONST {
+		b.WriteString("@SP\n")
+		b.WriteString("AM=M-1\n")
+		cw.writer.WriteString(b.String())
+		return nil
+	}
+
 	switch segment {
-	case "constant":
-		cw.writer.WriteString(popConstant())
+	case parser.SEG_LOCAL, parser.SEG_ARG, parser.SEG_THIS, parser.SEG_THAT:
+		// calculate address
+		b.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
+		b.WriteString("D=M\n")
+		b.WriteString(fmt.Sprintf("@%d\n", index))
+		b.WriteString("D=D+A\n")
+		// save address
+		b.WriteString("@R13\n")
+		b.WriteString("M=D\n")
+	case parser.SEG_PTR, parser.SEG_TEMP:
+		// calculate address
+		b.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
+		b.WriteString("D=A\n")
+		b.WriteString(fmt.Sprintf("@%d\n", index))
+		b.WriteString("D=D+A\n")
+		// save address
+		b.WriteString("@R13\n")
+		b.WriteString("M=D\n")
 	default:
 		return fmt.Errorf("undefined segment: %s", segment)
 	}
+
+	b.WriteString("@SP\n")
+	b.WriteString("AM=M-1\n")
+	b.WriteString("D=M\n")
+
+	b.WriteString("@R13\n")
+	b.WriteString("A=M\n")
+	b.WriteString("M=D\n")
+
+	cw.writer.WriteString(b.String())
 	return nil
 }
