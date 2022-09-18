@@ -96,6 +96,9 @@ func (cw *CodeWriter) writePush(cmd parser.Cmd, segment string, index int) error
 		b.WriteString(fmt.Sprintf("@%d\n", index))
 		b.WriteString("A=D+A\n")
 		b.WriteString("D=M\n")
+	case parser.SEG_STATIC:
+		b.WriteString(fmt.Sprintf("@Xxx.%d\n", index))
+		b.WriteString("D=M\n")
 	default:
 		return fmt.Errorf("undefined segment: %s", segment)
 	}
@@ -136,6 +139,12 @@ func (cw *CodeWriter) writePop(cmd parser.Cmd, segment string, index int) error 
 		b.WriteString("D=A\n")
 		b.WriteString(fmt.Sprintf("@%d\n", index))
 		b.WriteString("D=D+A\n")
+		// save address
+		b.WriteString("@R13\n")
+		b.WriteString("M=D\n")
+	case parser.SEG_STATIC:
+		b.WriteString(fmt.Sprintf("@Xxx.%d\n", index))
+		b.WriteString("D=A\n")
 		// save address
 		b.WriteString("@R13\n")
 		b.WriteString("M=D\n")

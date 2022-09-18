@@ -11,3 +11,5 @@ test "StackArithmetic" "SimpleAdd"
 test "StackArithmetic" "StackTest"
 
 test "MemoryAccess" "BasicTest"
+test "MemoryAccess" "PointerTest"
+test "MemoryAccess" "StaticTest"
