@@ -94,11 +94,11 @@ func (p *Parser) parse(row []byte) error {
 	case CMD_GOTO:
 		p.currentCmd = C_GOTO
 		p.arg1 = string(arg1)
-	case "if-goto":
+	case CMD_IF:
 		p.currentCmd = C_IF
 		p.arg1 = string(arg1)
 	// ignore the error because arg2 is ensured that be a numeric by regexp
-	case "function":
+	case CMD_FUNC:
 		p.currentCmd = C_FUNCTION
 		p.arg1 = string(arg1)
 		p.arg2, _ = strconv.Atoi(string(arg2))

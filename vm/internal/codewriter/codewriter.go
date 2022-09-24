@@ -2,7 +2,6 @@ package codewriter
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -47,109 +46,102 @@ func (cw *CodeWriter) WriteArithmetic(cmd string) error {
 }
 
 func (cw *CodeWriter) unary(cmd string) error {
-	var b bytes.Buffer
 	// this code is same as the code to pop from a constant segment
-	b.WriteString("@SP\n")
-	b.WriteString("AM=M-1\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("AM=M-1\n")
 
 	// update stack with the result
 	switch cmd {
 	case parser.CMD_NEG:
-		b.WriteString("M=-M\n")
+		cw.writer.WriteString("M=-M\n")
 	case parser.CMD_NOT:
-		b.WriteString("M=!M\n")
+		cw.writer.WriteString("M=!M\n")
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
 	}
 
 	// add stack pointer
-	b.WriteString("@SP\n")
-	b.WriteString("M=M+1\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("M=M+1\n")
 
-	cw.writer.WriteString(b.String())
 	return nil
 }
 
 func (cw *CodeWriter) binary(cmd string) error {
-	var b bytes.Buffer
 	// this code is same as the code to pop from a constant segment
-	b.WriteString("@SP\n")
-	b.WriteString("AM=M-1\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("AM=M-1\n")
 
 	// save the value and pop an another value
-	b.WriteString("D=M\n")
-	b.WriteString("@SP\n")
-	b.WriteString("AM=M-1\n")
+	cw.writer.WriteString("D=M\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("AM=M-1\n")
 
 	// update stack with the result
 	switch cmd {
 	case parser.CMD_ADD:
-		b.WriteString("M=M+D\n")
+		cw.writer.WriteString("M=M+D\n")
 	case parser.CMD_SUB:
-		b.WriteString("M=M-D\n")
+		cw.writer.WriteString("M=M-D\n")
 	case parser.CMD_AND:
-		b.WriteString("M=M&D\n")
+		cw.writer.WriteString("M=M&D\n")
 	case parser.CMD_OR:
-		b.WriteString("M=M|D\n")
+		cw.writer.WriteString("M=M|D\n")
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
 	}
 
 	// add stack pointer
-	b.WriteString("@SP\n")
-	b.WriteString("M=M+1\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("M=M+1\n")
 
-	cw.writer.WriteString(b.String())
 	return nil
 }
 
 func (cw *CodeWriter) cond(cmd string) error {
-	var b bytes.Buffer
-
 	// this code is same as the code to pop from a constant segment
-	b.WriteString("@SP\n")
-	b.WriteString("AM=M-1\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("AM=M-1\n")
 
 	// save the value and pop an another value
-	b.WriteString("D=M\n")
-	b.WriteString("@SP\n")
-	b.WriteString("AM=M-1\n")
+	cw.writer.WriteString("D=M\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("AM=M-1\n")
 
 	// compare
-	b.WriteString("D=M-D\n")
-	b.WriteString(fmt.Sprintf("@%s%d_T\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString("D=M-D\n")
+	cw.writer.WriteString(fmt.Sprintf("@%s%d_T\n", strings.ToUpper(cmd), cw.counter))
 	switch cmd {
 	case parser.CMD_EQ:
-		b.WriteString("D;JEQ\n")
+		cw.writer.WriteString("D;JEQ\n")
 	case parser.CMD_GT:
-		b.WriteString("D;JGT\n")
+		cw.writer.WriteString("D;JGT\n")
 	case parser.CMD_LT:
-		b.WriteString("D;JLT\n")
+		cw.writer.WriteString("D;JLT\n")
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
 	}
-	b.WriteString(fmt.Sprintf("@%s%d_F\n", strings.ToUpper(cmd), cw.counter))
-	b.WriteString("0;JMP\n")
+	cw.writer.WriteString(fmt.Sprintf("@%s%d_F\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString("0;JMP\n")
 
 	// set true or false
-	b.WriteString(fmt.Sprintf("(%s%d_T)\n", strings.ToUpper(cmd), cw.counter))
-	b.WriteString("D=-1\n")
-	b.WriteString(fmt.Sprintf("@%s%d_END\n", strings.ToUpper(cmd), cw.counter))
-	b.WriteString("0;JMP\n")
-	b.WriteString(fmt.Sprintf("(%s%d_F)\n", strings.ToUpper(cmd), cw.counter))
-	b.WriteString("D=0\n")
-	b.WriteString(fmt.Sprintf("@%s%d_END\n", strings.ToUpper(cmd), cw.counter))
-	b.WriteString("0;JMP\n")
+	cw.writer.WriteString(fmt.Sprintf("(%s%d_T)\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString("D=-1\n")
+	cw.writer.WriteString(fmt.Sprintf("@%s%d_END\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString("0;JMP\n")
+	cw.writer.WriteString(fmt.Sprintf("(%s%d_F)\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString("D=0\n")
+	cw.writer.WriteString(fmt.Sprintf("@%s%d_END\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString("0;JMP\n")
 
 	// update stack with the result
-	b.WriteString(fmt.Sprintf("(%s%d_END)\n", strings.ToUpper(cmd), cw.counter))
-	b.WriteString("@SP\n")
-	b.WriteString("A=M\n")
-	b.WriteString("M=D\n")
-	b.WriteString("@SP\n")
-	b.WriteString("M=M+1\n")
+	cw.writer.WriteString(fmt.Sprintf("(%s%d_END)\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("A=M\n")
+	cw.writer.WriteString("M=D\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("M=M+1\n")
 
-	cw.writer.WriteString(b.String())
 	cw.counter += 1
 	return nil
 }
@@ -170,97 +162,83 @@ var memSegMap = map[string]string{
 	parser.SEG_ARG:   "ARG",
 	parser.SEG_THIS:  "THIS",
 	parser.SEG_THAT:  "THAT",
-	// base address
-	parser.SEG_PTR:  "3",
-	parser.SEG_TEMP: "5",
+	parser.SEG_PTR:   "3", // base address
+	parser.SEG_TEMP:  "5", // base address
 }
 
 // writePush outputs the asm code to push a value to a specific segment.
 func (cw *CodeWriter) writePush(segment string, index int) error {
-	var b bytes.Buffer
-
 	switch segment {
 	case parser.SEG_CONST:
-		b.WriteString(fmt.Sprintf("@%d\n", index))
-		b.WriteString("D=A\n")
+		cw.writer.WriteString(fmt.Sprintf("@%d\n", index))
+		cw.writer.WriteString("D=A\n")
 	case parser.SEG_LOCAL, parser.SEG_ARG, parser.SEG_THIS, parser.SEG_THAT:
-		b.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
-		b.WriteString("D=M\n")
-		b.WriteString(fmt.Sprintf("@%d\n", index))
-		b.WriteString("A=D+A\n")
-		b.WriteString("D=M\n")
+		cw.writer.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
+		cw.writer.WriteString("D=M\n")
+		cw.writer.WriteString(fmt.Sprintf("@%d\n", index))
+		cw.writer.WriteString("A=D+A\n")
+		cw.writer.WriteString("D=M\n")
 	case parser.SEG_PTR, parser.SEG_TEMP:
-		b.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
-		b.WriteString("D=A\n")
-		b.WriteString(fmt.Sprintf("@%d\n", index))
-		b.WriteString("A=D+A\n")
-		b.WriteString("D=M\n")
+		cw.writer.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
+		cw.writer.WriteString("D=A\n")
+		cw.writer.WriteString(fmt.Sprintf("@%d\n", index))
+		cw.writer.WriteString("A=D+A\n")
+		cw.writer.WriteString("D=M\n")
 	case parser.SEG_STATIC:
-		b.WriteString(fmt.Sprintf("@Xxx.%d\n", index))
-		b.WriteString("D=M\n")
+		cw.writer.WriteString(fmt.Sprintf("@Xxx.%d\n", index))
+		cw.writer.WriteString("D=M\n")
 	default:
 		return fmt.Errorf("undefined segment: %s", segment)
 	}
 
-	b.WriteString("@SP\n")
-	b.WriteString("A=M\n")
-	b.WriteString("M=D\n")
-	b.WriteString("@SP\n")
-	b.WriteString("M=M+1\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("A=M\n")
+	cw.writer.WriteString("M=D\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("M=M+1\n")
 
-	cw.writer.WriteString(b.String())
 	return nil
 }
 
 // writePop outputs the asm code to pop a value from a specific segment.
 // The return value is set to M.
 func (cw *CodeWriter) writePop(segment string, index int) error {
-	var b bytes.Buffer
-
 	if segment == parser.SEG_CONST {
-		b.WriteString("@SP\n")
-		b.WriteString("AM=M-1\n")
-		cw.writer.WriteString(b.String())
+		cw.writer.WriteString("@SP\n")
+		cw.writer.WriteString("AM=M-1\n")
 		return nil
 	}
 
+	// calculate address
 	switch segment {
 	case parser.SEG_LOCAL, parser.SEG_ARG, parser.SEG_THIS, parser.SEG_THAT:
-		// calculate address
-		b.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
-		b.WriteString("D=M\n")
-		b.WriteString(fmt.Sprintf("@%d\n", index))
-		b.WriteString("D=D+A\n")
-		// save address
-		b.WriteString("@R13\n")
-		b.WriteString("M=D\n")
+		cw.writer.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
+		cw.writer.WriteString("D=M\n")
+		cw.writer.WriteString(fmt.Sprintf("@%d\n", index))
+		cw.writer.WriteString("D=D+A\n")
 	case parser.SEG_PTR, parser.SEG_TEMP:
-		// calculate address
-		b.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
-		b.WriteString("D=A\n")
-		b.WriteString(fmt.Sprintf("@%d\n", index))
-		b.WriteString("D=D+A\n")
-		// save address
-		b.WriteString("@R13\n")
-		b.WriteString("M=D\n")
+		cw.writer.WriteString(fmt.Sprintf("@%s\n", memSegMap[segment]))
+		cw.writer.WriteString("D=A\n")
+		cw.writer.WriteString(fmt.Sprintf("@%d\n", index))
+		cw.writer.WriteString("D=D+A\n")
 	case parser.SEG_STATIC:
-		b.WriteString(fmt.Sprintf("@Xxx.%d\n", index))
-		b.WriteString("D=A\n")
-		// save address
-		b.WriteString("@R13\n")
-		b.WriteString("M=D\n")
+		cw.writer.WriteString(fmt.Sprintf("@Xxx.%d\n", index))
+		cw.writer.WriteString("D=A\n")
 	default:
 		return fmt.Errorf("undefined segment: %s", segment)
 	}
 
-	b.WriteString("@SP\n")
-	b.WriteString("AM=M-1\n")
-	b.WriteString("D=M\n")
+	// save address
+	cw.writer.WriteString("@R13\n")
+	cw.writer.WriteString("M=D\n")
 
-	b.WriteString("@R13\n")
-	b.WriteString("A=M\n")
-	b.WriteString("M=D\n")
+	// update the stack and the segment
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("AM=M-1\n")
+	cw.writer.WriteString("D=M\n")
+	cw.writer.WriteString("@R13\n")
+	cw.writer.WriteString("A=M\n")
+	cw.writer.WriteString("M=D\n")
 
-	cw.writer.WriteString(b.String())
 	return nil
 }
