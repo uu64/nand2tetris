@@ -13,7 +13,7 @@ import (
 type Parser struct {
 	scanner         *bufio.Scanner
 	hasMoreCommands bool
-	currentCmd      Cmd
+	currentCmd      CmdType
 	arg1            string
 	arg2            int
 }
@@ -40,7 +40,7 @@ func (p *Parser) Advance() error {
 	return p.parse(p.scanner.Bytes())
 }
 
-func (p *Parser) CommandType() Cmd {
+func (p *Parser) CommandType() CmdType {
 	return p.currentCmd
 }
 
@@ -83,15 +83,15 @@ func (p *Parser) parse(row []byte) error {
 	arg2 := matches[regexpCmd.SubexpIndex("arg2")]
 
 	switch string(cmd) {
-	case "add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not":
+	case CMD_ADD, CMD_SUB, CMD_NEG, CMD_EQ, CMD_GT, CMD_LT, CMD_AND, CMD_OR, CMD_NOT:
 		p.currentCmd = C_ARITHMETRIC
 		p.arg1 = string(cmd)
-	case "return":
+	case CMD_RETURN:
 		p.currentCmd = C_RETURN
-	case "label":
+	case CMD_LABEL:
 		p.currentCmd = C_LABEL
 		p.arg1 = string(arg1)
-	case "goto":
+	case CMD_GOTO:
 		p.currentCmd = C_GOTO
 		p.arg1 = string(arg1)
 	case "if-goto":
@@ -102,15 +102,15 @@ func (p *Parser) parse(row []byte) error {
 		p.currentCmd = C_FUNCTION
 		p.arg1 = string(arg1)
 		p.arg2, _ = strconv.Atoi(string(arg2))
-	case "call":
+	case CMD_CALL:
 		p.currentCmd = C_CALL
 		p.arg1 = string(arg1)
 		p.arg2, _ = strconv.Atoi(string(arg2))
-	case "push":
+	case CMD_PUSH:
 		p.currentCmd = C_PUSH
 		p.arg1 = string(arg1)
 		p.arg2, _ = strconv.Atoi(string(arg2))
-	case "pop":
+	case CMD_POP:
 		p.currentCmd = C_POP
 		p.arg1 = string(arg1)
 		p.arg2, _ = strconv.Atoi(string(arg2))

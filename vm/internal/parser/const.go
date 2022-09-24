@@ -1,9 +1,9 @@
 package parser
 
-type Cmd int
+type CmdType int
 
 const (
-	COMMENT Cmd = iota
+	COMMENT CmdType = iota
 	EMPTY
 	C_ARITHMETRIC
 	C_PUSH
@@ -16,7 +16,25 @@ const (
 	C_RETURN
 )
 
-type Segment string
+const (
+	CMD_ADD    = "add"
+	CMD_SUB    = "sub"
+	CMD_NEG    = "neg"
+	CMD_EQ     = "eq"
+	CMD_GT     = "gt"
+	CMD_LT     = "lt"
+	CMD_AND    = "and"
+	CMD_OR     = "or"
+	CMD_NOT    = "not"
+	CMD_RETURN = "return"
+	CMD_LABEL  = "label"
+	CMD_GOTO   = "goto"
+	CMD_IF     = "if-goto"
+	CMD_FUNC   = "function"
+	CMD_CALL   = "call"
+	CMD_PUSH   = "push"
+	CMD_POP    = "pop"
+)
 
 const (
 	SEG_ARG    = "argument"

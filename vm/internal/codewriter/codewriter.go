@@ -34,11 +34,11 @@ func (cw *CodeWriter) Close() error {
 
 func (cw *CodeWriter) WriteArithmetic(cmd string) error {
 	switch cmd {
-	case "add", "sub", "and", "or":
+	case parser.CMD_ADD, parser.CMD_SUB, parser.CMD_AND, parser.CMD_OR:
 		cw.binary(cmd)
-	case "neg", "not":
+	case parser.CMD_NEG, parser.CMD_NOT:
 		cw.unary(cmd)
-	case "eq", "gt", "lt":
+	case parser.CMD_EQ, parser.CMD_GT, parser.CMD_LT:
 		cw.cond(cmd)
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
@@ -54,9 +54,9 @@ func (cw *CodeWriter) unary(cmd string) error {
 
 	// update stack with the result
 	switch cmd {
-	case "neg":
+	case parser.CMD_NEG:
 		b.WriteString("M=-M\n")
-	case "not":
+	case parser.CMD_NOT:
 		b.WriteString("M=!M\n")
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
@@ -83,13 +83,13 @@ func (cw *CodeWriter) binary(cmd string) error {
 
 	// update stack with the result
 	switch cmd {
-	case "add":
+	case parser.CMD_ADD:
 		b.WriteString("M=M+D\n")
-	case "sub":
+	case parser.CMD_SUB:
 		b.WriteString("M=M-D\n")
-	case "and":
+	case parser.CMD_AND:
 		b.WriteString("M=M&D\n")
-	case "or":
+	case parser.CMD_OR:
 		b.WriteString("M=M|D\n")
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
@@ -119,11 +119,11 @@ func (cw *CodeWriter) cond(cmd string) error {
 	b.WriteString("D=M-D\n")
 	b.WriteString(fmt.Sprintf("@%s%d_T\n", strings.ToUpper(cmd), cw.counter))
 	switch cmd {
-	case "eq":
+	case parser.CMD_EQ:
 		b.WriteString("D;JEQ\n")
-	case "gt":
+	case parser.CMD_GT:
 		b.WriteString("D;JGT\n")
-	case "lt":
+	case parser.CMD_LT:
 		b.WriteString("D;JLT\n")
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
@@ -154,7 +154,7 @@ func (cw *CodeWriter) cond(cmd string) error {
 	return nil
 }
 
-func (cw *CodeWriter) WritePushPop(cmd parser.Cmd, segment string, index int) error {
+func (cw *CodeWriter) WritePushPop(cmd parser.CmdType, segment string, index int) error {
 	switch cmd {
 	case parser.C_PUSH:
 		return cw.writePush(segment, index)
