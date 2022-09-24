@@ -4,48 +4,6 @@ import "fmt"
 
 var opCounter = 0
 
-// add two values.
-const addTmpl = `@SP
-AM=M-1
-D=M
-@SP
-AM=M-1
-M=M+D
-@SP
-M=M+1
-`
-
-func add() string {
-	return addTmpl
-}
-
-// sub two values.
-const subTmpl = `@SP
-AM=M-1
-D=M
-@SP
-AM=M-1
-M=M-D
-@SP
-M=M+1
-`
-
-func sub() string {
-	return subTmpl
-}
-
-// neg inverts the value.
-const negTmpl = `@SP
-AM=M-1
-M=-M
-@SP
-M=M+1
-`
-
-func neg() string {
-	return negTmpl
-}
-
 // eq compares the two values
 // and sets -1 if they are equal and 0 otherwise in the stack
 const eqTmpl = `@SP
@@ -143,46 +101,4 @@ M=M+1
 func lt() string {
 	opCounter += 1
 	return fmt.Sprintf(ltTmpl, opCounter)
-}
-
-// and sets the value x&y in the stack
-const andTmpl = `@SP
-AM=M-1
-D=M
-@SP
-AM=M-1
-M=M&D
-@SP
-M=M+1
-`
-
-func and() string {
-	return andTmpl
-}
-
-// or sets the value x|y in the stack
-const orTmpl = `@SP
-AM=M-1
-D=M
-@SP
-AM=M-1
-M=M|D
-@SP
-M=M+1
-`
-
-func or() string {
-	return orTmpl
-}
-
-// not sets the value !x in the stack
-const notTmpl = `@SP
-AM=M-1
-M=!M
-@SP
-M=M+1
-`
-
-func not() string {
-	return notTmpl
 }

@@ -32,36 +32,87 @@ func (cw *CodeWriter) Close() error {
 
 func (cw *CodeWriter) WriteArithmetic(cmd string) error {
 	switch cmd {
-	case "add":
-		cw.writer.WriteString(add())
-	case "sub":
-		cw.writer.WriteString(sub())
-	case "neg":
-		cw.writer.WriteString(neg())
+	case "add", "sub", "and", "or":
+		cw.binary(cmd)
+	case "neg", "not":
+		cw.unary(cmd)
 	case "eq":
 		cw.writer.WriteString(eq())
 	case "gt":
 		cw.writer.WriteString(gt())
 	case "lt":
 		cw.writer.WriteString(lt())
-	case "and":
-		cw.writer.WriteString(and())
-	case "or":
-		cw.writer.WriteString(or())
-	case "not":
-		cw.writer.WriteString(not())
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
 	}
 	return nil
 }
 
+func (cw *CodeWriter) unary(cmd string) error {
+	var b bytes.Buffer
+	// this code is same as the code to pop from a constant segment
+	b.WriteString("@SP\n")
+	b.WriteString("AM=M-1\n")
+
+	// update stack with the result
+	switch cmd {
+	case "neg":
+		b.WriteString("M=-M\n")
+	case "not":
+		b.WriteString("M=!M\n")
+	default:
+		return fmt.Errorf("undefined operator: %s", cmd)
+	}
+
+	// add stack pointer
+	b.WriteString("@SP\n")
+	b.WriteString("M=M+1\n")
+
+	cw.writer.WriteString(b.String())
+	return nil
+}
+
+func (cw *CodeWriter) binary(cmd string) error {
+	var b bytes.Buffer
+	// this code is same as the code to pop from a constant segment
+	b.WriteString("@SP\n")
+	b.WriteString("AM=M-1\n")
+
+	// save the value and pop an another value
+	b.WriteString("D=M\n")
+	b.WriteString("@SP\n")
+	b.WriteString("AM=M-1\n")
+
+	// update stack with the result
+	switch cmd {
+	case "add":
+		b.WriteString("M=M+D\n")
+	case "sub":
+		b.WriteString("M=M-D\n")
+	case "and":
+		b.WriteString("M=M&D\n")
+	case "or":
+		b.WriteString("M=M|D\n")
+	default:
+		return fmt.Errorf("undefined operator: %s", cmd)
+	}
+
+	// add stack pointer
+	b.WriteString("@SP\n")
+	b.WriteString("M=M+1\n")
+
+	cw.writer.WriteString(b.String())
+	return nil
+}
+
+// func (cw *CodeWriter) cond(cmd string) error {}
+
 func (cw *CodeWriter) WritePushPop(cmd parser.Cmd, segment string, index int) error {
 	switch cmd {
 	case parser.C_PUSH:
-		return cw.writePush(cmd, segment, index)
+		return cw.writePush(segment, index)
 	case parser.C_POP:
-		return cw.writePop(cmd, segment, index)
+		return cw.writePop(segment, index)
 	default:
 		return fmt.Errorf("invalid operation: %d", cmd)
 	}
@@ -77,7 +128,8 @@ var memSegMap = map[string]string{
 	parser.SEG_TEMP: "5",
 }
 
-func (cw *CodeWriter) writePush(cmd parser.Cmd, segment string, index int) error {
+// writePush outputs the asm code to push a value to a specific segment.
+func (cw *CodeWriter) writePush(segment string, index int) error {
 	var b bytes.Buffer
 
 	switch segment {
@@ -113,7 +165,9 @@ func (cw *CodeWriter) writePush(cmd parser.Cmd, segment string, index int) error
 	return nil
 }
 
-func (cw *CodeWriter) writePop(cmd parser.Cmd, segment string, index int) error {
+// writePop outputs the asm code to pop a value from a specific segment.
+// The return value is set to M.
+func (cw *CodeWriter) writePop(segment string, index int) error {
 	var b bytes.Buffer
 
 	if segment == parser.SEG_CONST {
