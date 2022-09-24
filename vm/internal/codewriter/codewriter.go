@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/uu64/nand2tetris/vm/internal/parser"
 )
@@ -12,10 +13,11 @@ import (
 type CodeWriter struct {
 	writer        *bufio.Writer
 	inputFileName string
+	counter       int
 }
 
 func New(f io.Writer) *CodeWriter {
-	return &CodeWriter{bufio.NewWriter(f), ""}
+	return &CodeWriter{bufio.NewWriter(f), "", 0}
 }
 
 func (cw *CodeWriter) SetFileName(name string) {
@@ -36,12 +38,8 @@ func (cw *CodeWriter) WriteArithmetic(cmd string) error {
 		cw.binary(cmd)
 	case "neg", "not":
 		cw.unary(cmd)
-	case "eq":
-		cw.writer.WriteString(eq())
-	case "gt":
-		cw.writer.WriteString(gt())
-	case "lt":
-		cw.writer.WriteString(lt())
+	case "eq", "gt", "lt":
+		cw.cond(cmd)
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
 	}
@@ -105,7 +103,56 @@ func (cw *CodeWriter) binary(cmd string) error {
 	return nil
 }
 
-// func (cw *CodeWriter) cond(cmd string) error {}
+func (cw *CodeWriter) cond(cmd string) error {
+	var b bytes.Buffer
+
+	// this code is same as the code to pop from a constant segment
+	b.WriteString("@SP\n")
+	b.WriteString("AM=M-1\n")
+
+	// save the value and pop an another value
+	b.WriteString("D=M\n")
+	b.WriteString("@SP\n")
+	b.WriteString("AM=M-1\n")
+
+	// compare
+	b.WriteString("D=M-D\n")
+	b.WriteString(fmt.Sprintf("@%s%d_T\n", strings.ToUpper(cmd), cw.counter))
+	switch cmd {
+	case "eq":
+		b.WriteString("D;JEQ\n")
+	case "gt":
+		b.WriteString("D;JGT\n")
+	case "lt":
+		b.WriteString("D;JLT\n")
+	default:
+		return fmt.Errorf("undefined operator: %s", cmd)
+	}
+	b.WriteString(fmt.Sprintf("@%s%d_F\n", strings.ToUpper(cmd), cw.counter))
+	b.WriteString("0;JMP\n")
+
+	// set true or false
+	b.WriteString(fmt.Sprintf("(%s%d_T)\n", strings.ToUpper(cmd), cw.counter))
+	b.WriteString("D=-1\n")
+	b.WriteString(fmt.Sprintf("@%s%d_END\n", strings.ToUpper(cmd), cw.counter))
+	b.WriteString("0;JMP\n")
+	b.WriteString(fmt.Sprintf("(%s%d_F)\n", strings.ToUpper(cmd), cw.counter))
+	b.WriteString("D=0\n")
+	b.WriteString(fmt.Sprintf("@%s%d_END\n", strings.ToUpper(cmd), cw.counter))
+	b.WriteString("0;JMP\n")
+
+	// update stack with the result
+	b.WriteString(fmt.Sprintf("(%s%d_END)\n", strings.ToUpper(cmd), cw.counter))
+	b.WriteString("@SP\n")
+	b.WriteString("A=M\n")
+	b.WriteString("M=D\n")
+	b.WriteString("@SP\n")
+	b.WriteString("M=M+1\n")
+
+	cw.writer.WriteString(b.String())
+	cw.counter += 1
+	return nil
+}
 
 func (cw *CodeWriter) WritePushPop(cmd parser.Cmd, segment string, index int) error {
 	switch cmd {
