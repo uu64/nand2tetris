@@ -20,3 +20,5 @@ test "07" "MemoryAccess" "StaticTest"
 
 test "08" "ProgramFlow" "BasicLoop"
 test "08" "ProgramFlow" "FibonacciSeries"
+
+test "08" "FunctionCalls" "SimpleFunction"

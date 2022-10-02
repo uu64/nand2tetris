@@ -280,8 +280,56 @@ func (cw *CodeWriter) WriteIf(label string) error {
 	return nil
 }
 
-// func (cw *CodeWriter) writeCall(functionName string, numArgs int) {}
+// func (cw *CodeWriter) WriteCall(functionName string, numArgs int) {}
 
-// func (cw *CodeWriter) writeReturn() {}
+func (cw *CodeWriter) WriteReturn() error {
+	// FRAME = LCL
+	cw.writer.WriteString("@LCL\n")
+	cw.writer.WriteString("D=M\n")
+	// RET = *(FRAME-5)
+	cw.writer.WriteString("@5\n")
+	cw.writer.WriteString("A=D-A\n")
+	cw.writer.WriteString("D=M\n")
 
-// func (cw *CodeWriter) writeFunction(functionName string, numLocals int) {}
+	// save RET
+	cw.writer.WriteString("@R13\n")
+	cw.writer.WriteString("M=D\n")
+
+	// *ARG = pop()
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("A=M-1\n")
+	cw.writer.WriteString("D=M\n")
+	cw.writer.WriteString("@ARG\n")
+	cw.writer.WriteString("A=M\n")
+	cw.writer.WriteString("M=D\n")
+
+	// SP = ARG+1
+	cw.writer.WriteString("@ARG\n")
+	cw.writer.WriteString("D=M\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("M=D+1\n")
+
+	for i, seg := range []string{parser.SEG_THAT, parser.SEG_THIS, parser.SEG_ARG, parser.SEG_LOCAL} {
+		// seg = *(FRAME-i)
+		cw.writer.WriteString("@LCL\n")
+		cw.writer.WriteString("D=M\n")
+		cw.writer.WriteString(fmt.Sprintf("@%d\n", i+1))
+		cw.writer.WriteString("A=D-A\n")
+		cw.writer.WriteString("D=M\n")
+		cw.writer.WriteString(fmt.Sprintf("@%s\n", memSegMap[seg]))
+		cw.writer.WriteString("M=D\n")
+	}
+
+	// goto RET
+	cw.writer.WriteString("@R13\n")
+	cw.writer.WriteString("A=M\n")
+	cw.writer.WriteString("0;JMP\n")
+	return nil
+}
+
+func (cw *CodeWriter) WriteFunction(functionName string, numLocals int) error {
+	cw.writer.WriteString(fmt.Sprintf("(%s)\n", functionName))
+	cw.writePush(parser.SEG_CONST, 0)
+	cw.writePush(parser.SEG_CONST, 0)
+	return nil
+}
