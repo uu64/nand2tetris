@@ -19,6 +19,10 @@ func New(f io.Writer) *CodeWriter {
 	return &CodeWriter{bufio.NewWriter(f), "", 0}
 }
 
+func (cw *CodeWriter) WriteInit() {
+	// TODO: impl after SimpleFunction
+}
+
 func (cw *CodeWriter) SetFileName(name string) {
 	cw.inputFileName = name
 	// TODO: impl something
@@ -244,3 +248,40 @@ func (cw *CodeWriter) writePop(segment string, index int) error {
 
 	return nil
 }
+
+func (cw *CodeWriter) WriteLabel(label string) error {
+	cw.writer.WriteString(fmt.Sprintf("(%s)\n", label))
+	return nil
+}
+
+func (cw *CodeWriter) WriteGoto(label string) error {
+	cw.writer.WriteString(fmt.Sprintf("@%s\n", label))
+	cw.writer.WriteString("0;JMP\n")
+	return nil
+}
+
+func (cw *CodeWriter) WriteIf(label string) error {
+	// this code is same as the code to pop from a constant segment
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("AM=M-1\n")
+	cw.writer.WriteString("D=M\n")
+
+	// if M=0, do nothing
+	cw.writer.WriteString(fmt.Sprintf("@IF%d\n", cw.counter))
+	cw.writer.WriteString("D;JEQ\n")
+
+	// if M!=0, jump to label
+	cw.writer.WriteString(fmt.Sprintf("@%s\n", label))
+	cw.writer.WriteString("0;JMP\n")
+
+	cw.writer.WriteString(fmt.Sprintf("(IF%d)\n", cw.counter))
+
+	cw.counter += 1
+	return nil
+}
+
+// func (cw *CodeWriter) writeCall(functionName string, numArgs int) {}
+
+// func (cw *CodeWriter) writeReturn() {}
+
+// func (cw *CodeWriter) writeFunction(functionName string, numLocals int) {}

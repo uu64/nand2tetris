@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -51,8 +52,16 @@ func (cmd *Cmd) Run() (err error) {
 			err = cw.WritePushPop(parser.C_PUSH, p.Arg1(), p.Arg2())
 		case parser.C_POP:
 			err = cw.WritePushPop(parser.C_POP, p.Arg1(), p.Arg2())
-		default:
+		case parser.C_LABEL:
+			err = cw.WriteLabel(p.Arg1())
+		case parser.C_GOTO:
+			err = cw.WriteGoto(p.Arg1())
+		case parser.C_IF:
+			err = cw.WriteIf(p.Arg1())
+		case parser.COMMENT, parser.EMPTY:
 			// do nothing
+		default:
+			err = fmt.Errorf("undefined command type: %d", p.CommandType())
 		}
 		if err != nil {
 			log.Fatal(err)

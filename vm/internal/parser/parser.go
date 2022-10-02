@@ -52,7 +52,7 @@ func (p *Parser) Arg2() int {
 	return p.arg2
 }
 
-var regexpCmd = regexp.MustCompile(`^(?P<cmd>[a-z\-]+)\s*(?P<arg1>[0-9A-Za-z_:\.]+)*\s*(?P<arg2>[0-9]+)*`)
+var regexpCmd = regexp.MustCompile(`^(?P<cmd>[a-z\-]+)\s*(?P<arg1>[A-Za-z_:\.][0-9A-Za-z_:\.]+)*\s*(?P<arg2>[0-9]+)*`)
 
 func (p *Parser) parse(row []byte) error {
 	p.arg1 = ""
