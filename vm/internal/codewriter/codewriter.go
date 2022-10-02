@@ -99,6 +99,8 @@ func (cw *CodeWriter) binary(cmd string) error {
 }
 
 func (cw *CodeWriter) cond(cmd string) error {
+	id := strings.ToUpper(cmd)
+
 	// this code is same as the code to pop from a constant segment
 	cw.writer.WriteString("@SP\n")
 	cw.writer.WriteString("AM=M-1\n")
@@ -110,7 +112,7 @@ func (cw *CodeWriter) cond(cmd string) error {
 
 	// compare
 	cw.writer.WriteString("D=M-D\n")
-	cw.writer.WriteString(fmt.Sprintf("@%s%d_T\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString(fmt.Sprintf("@%s%d_T\n", id, cw.counter))
 	switch cmd {
 	case parser.CMD_EQ:
 		cw.writer.WriteString("D;JEQ\n")
@@ -121,21 +123,21 @@ func (cw *CodeWriter) cond(cmd string) error {
 	default:
 		return fmt.Errorf("undefined operator: %s", cmd)
 	}
-	cw.writer.WriteString(fmt.Sprintf("@%s%d_F\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString(fmt.Sprintf("@%s%d_F\n", id, cw.counter))
 	cw.writer.WriteString("0;JMP\n")
 
 	// set true or false
-	cw.writer.WriteString(fmt.Sprintf("(%s%d_T)\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString(fmt.Sprintf("(%s%d_T)\n", id, cw.counter))
 	cw.writer.WriteString("D=-1\n")
-	cw.writer.WriteString(fmt.Sprintf("@%s%d_END\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString(fmt.Sprintf("@%s%d_END\n", id, cw.counter))
 	cw.writer.WriteString("0;JMP\n")
-	cw.writer.WriteString(fmt.Sprintf("(%s%d_F)\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString(fmt.Sprintf("(%s%d_F)\n", id, cw.counter))
 	cw.writer.WriteString("D=0\n")
-	cw.writer.WriteString(fmt.Sprintf("@%s%d_END\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString(fmt.Sprintf("@%s%d_END\n", id, cw.counter))
 	cw.writer.WriteString("0;JMP\n")
 
 	// update stack with the result
-	cw.writer.WriteString(fmt.Sprintf("(%s%d_END)\n", strings.ToUpper(cmd), cw.counter))
+	cw.writer.WriteString(fmt.Sprintf("(%s%d_END)\n", id, cw.counter))
 	cw.writer.WriteString("@SP\n")
 	cw.writer.WriteString("A=M\n")
 	cw.writer.WriteString("M=D\n")
