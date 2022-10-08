@@ -329,7 +329,8 @@ func (cw *CodeWriter) WriteReturn() error {
 
 func (cw *CodeWriter) WriteFunction(functionName string, numLocals int) error {
 	cw.writer.WriteString(fmt.Sprintf("(%s)\n", functionName))
-	cw.writePush(parser.SEG_CONST, 0)
-	cw.writePush(parser.SEG_CONST, 0)
+	for i := 0; i < numLocals; i++ {
+		cw.writePush(parser.SEG_CONST, 0)
+	}
 	return nil
 }
