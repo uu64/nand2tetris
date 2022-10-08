@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -8,8 +9,10 @@ import (
 	"github.com/uu64/nand2tetris/vm/cmd"
 )
 
+var output = flag.String("o", "out.asm", "output file")
+
 func usage() {
-	fmt.Println("usage: vmc /path/to/file.asm")
+	fmt.Println("usage: vmc [-o output] input [input ...]")
 }
 
 func main() {
@@ -18,10 +21,12 @@ func main() {
 		return
 	}
 
-	outputFilePath := fmt.Sprintf("%s.asm", os.Args[1][0:len(os.Args[1])-len(".vm")])
-	cmd := cmd.New(os.Args[1], outputFilePath)
+	flag.Parse()
+	fmt.Println(flag.Args())
+
+	cmd := cmd.New(flag.Args(), *output)
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("output: %s\n", outputFilePath)
+	fmt.Printf("output: %s\n", *output)
 }

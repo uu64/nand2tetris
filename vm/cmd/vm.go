@@ -10,34 +10,26 @@ import (
 )
 
 type Cmd struct {
-	vmfilePath  string
+	vmfilePaths []string
 	asmfilePath string
 }
 
-func New(vmfilePath, asmfilePath string) *Cmd {
+func New(vmfilePaths []string, asmfilePath string) *Cmd {
 	return &Cmd{
-		vmfilePath:  vmfilePath,
+		vmfilePaths: vmfilePaths,
 		asmfilePath: asmfilePath,
 	}
 }
 
-func (cmd *Cmd) Run() (err error) {
-	in, err := os.Open(cmd.vmfilePath)
+func parse(cw *codewriter.CodeWriter, filePath string) error {
+	in, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
 	defer in.Close()
 	p := parser.New(in)
 
-	out, err := os.Create(cmd.asmfilePath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-	cw := codewriter.New(out)
-
-	// TODO: support multiple files
-	cw.SetFileName(cmd.vmfilePath)
+	cw.SetFileName(filePath)
 
 	for p.HasMoreCommands() {
 		if err := p.Advance(); err != nil {
@@ -69,6 +61,22 @@ func (cmd *Cmd) Run() (err error) {
 		}
 		if err != nil {
 			log.Fatal(err)
+		}
+	}
+	return nil
+}
+
+func (cmd *Cmd) Run() (err error) {
+	out, err := os.Create(cmd.asmfilePath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	cw := codewriter.New(out)
+
+	for _, vmfilePath := range cmd.vmfilePaths {
+		if err := parse(cw, vmfilePath); err != nil {
+			return err
 		}
 	}
 
