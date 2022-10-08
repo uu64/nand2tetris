@@ -13,11 +13,17 @@ import (
 type CodeWriter struct {
 	writer        *bufio.Writer
 	inputFileName string
+	functionName  string
 	counter       int
 }
 
 func New(f io.Writer) *CodeWriter {
-	return &CodeWriter{bufio.NewWriter(f), "", 0}
+	return &CodeWriter{
+		writer:        bufio.NewWriter(f),
+		inputFileName: "",
+		functionName:  "",
+		counter:       0,
+	}
 }
 
 func (cw *CodeWriter) WriteInit() {
@@ -282,7 +288,61 @@ func (cw *CodeWriter) WriteIf(label string) error {
 	return nil
 }
 
-// func (cw *CodeWriter) WriteCall(functionName string, numArgs int) {}
+func (cw *CodeWriter) WriteCall(functionName string, numArgs int) error {
+	ns := strings.TrimSuffix(cw.inputFileName, filepath.Ext(cw.inputFileName))
+	retAddr := fmt.Sprintf("%s.RET_ADDR\n", ns)
+
+	pushAddr := func(addr string) {
+		cw.writer.WriteString(fmt.Sprintf("@%s\n", addr))
+		cw.writer.WriteString("D=M\n")
+		cw.writer.WriteString("@SP\n")
+		cw.writer.WriteString("A=M\n")
+		cw.writer.WriteString("M=D\n")
+		cw.writer.WriteString("@SP\n")
+		cw.writer.WriteString("M=M+1\n")
+	}
+
+	// push return-addr
+	cw.writer.WriteString(fmt.Sprintf("@%s\n", retAddr))
+	cw.writer.WriteString("D=A\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("A=M\n")
+	cw.writer.WriteString("M=D\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("M=M+1\n")
+
+	// push LCL
+	// push ARG
+	// push THIS
+	// push THAT
+	pushAddr(parser.SEG_LOCAL)
+	pushAddr(parser.SEG_ARG)
+	pushAddr(parser.SEG_THIS)
+	pushAddr(parser.SEG_THAT)
+
+	// ARG = SP-n-5
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("D=M\n")
+	cw.writer.WriteString(fmt.Sprintf("@%d\n", numArgs))
+	cw.writer.WriteString("D=D-A\n")
+	cw.writer.WriteString("@5\n")
+	cw.writer.WriteString("D=D-A\n")
+	cw.writer.WriteString("@ARG\n")
+	cw.writer.WriteString("M=D\n")
+
+	// LCL = SP
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("D=M\n")
+	cw.writer.WriteString("@LCL\n")
+	cw.writer.WriteString("M=D\n")
+
+	// goto f
+	cw.WriteGoto(functionName)
+
+	// (return-address)
+	cw.writer.WriteString(fmt.Sprintf("(%s)\n", retAddr))
+	return nil
+}
 
 func (cw *CodeWriter) WriteReturn() error {
 	// FRAME = LCL

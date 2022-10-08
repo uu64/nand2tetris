@@ -23,3 +23,4 @@ check "08" "ProgramFlow" "BasicLoop"
 check "08" "ProgramFlow" "FibonacciSeries"
 
 check "08" "FunctionCalls" "SimpleFunction"
+check "08" "FunctionCalls" "FibonacciElement"
