@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 
 	"github.com/uu64/nand2tetris/vm/internal/parser"
@@ -25,7 +26,6 @@ func (cw *CodeWriter) WriteInit() {
 
 func (cw *CodeWriter) SetFileName(name string) {
 	cw.inputFileName = name
-	// TODO: impl something
 }
 
 func (cw *CodeWriter) Close() error {
@@ -191,7 +191,8 @@ func (cw *CodeWriter) writePush(segment string, index int) error {
 		cw.writer.WriteString("A=D+A\n")
 		cw.writer.WriteString("D=M\n")
 	case parser.SEG_STATIC:
-		cw.writer.WriteString(fmt.Sprintf("@Xxx.%d\n", index))
+		ns := strings.TrimSuffix(cw.inputFileName, filepath.Ext(cw.inputFileName))
+		cw.writer.WriteString(fmt.Sprintf("@%s.%d\n", ns, index))
 		cw.writer.WriteString("D=M\n")
 	default:
 		return fmt.Errorf("undefined segment: %s", segment)
@@ -228,7 +229,8 @@ func (cw *CodeWriter) writePop(segment string, index int) error {
 		cw.writer.WriteString(fmt.Sprintf("@%d\n", index))
 		cw.writer.WriteString("D=D+A\n")
 	case parser.SEG_STATIC:
-		cw.writer.WriteString(fmt.Sprintf("@Xxx.%d\n", index))
+		ns := strings.TrimSuffix(cw.inputFileName, filepath.Ext(cw.inputFileName))
+		cw.writer.WriteString(fmt.Sprintf("@%s.%d\n", ns, index))
 		cw.writer.WriteString("D=A\n")
 	default:
 		return fmt.Errorf("undefined segment: %s", segment)

@@ -22,7 +22,6 @@ func main() {
 	}
 
 	flag.Parse()
-	fmt.Println(flag.Args())
 
 	cmd := cmd.New(flag.Args(), *output)
 	if err := cmd.Run(); err != nil {

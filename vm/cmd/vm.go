@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/uu64/nand2tetris/vm/internal/codewriter"
 	"github.com/uu64/nand2tetris/vm/internal/parser"
@@ -21,15 +22,15 @@ func New(vmfilePaths []string, asmfilePath string) *Cmd {
 	}
 }
 
-func parse(cw *codewriter.CodeWriter, filePath string) error {
-	in, err := os.Open(filePath)
+func parse(cw *codewriter.CodeWriter, asmfilePath string) error {
+	in, err := os.Open(asmfilePath)
 	if err != nil {
 		return err
 	}
 	defer in.Close()
 	p := parser.New(in)
 
-	cw.SetFileName(filePath)
+	cw.SetFileName(filepath.Base(asmfilePath))
 
 	for p.HasMoreCommands() {
 		if err := p.Advance(); err != nil {
