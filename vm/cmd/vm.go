@@ -11,14 +11,16 @@ import (
 )
 
 type Cmd struct {
-	vmfilePaths []string
-	asmfilePath string
+	vmfilePaths      []string
+	asmfilePath      string
+	disableBootstrap bool
 }
 
-func New(vmfilePaths []string, asmfilePath string) *Cmd {
+func New(vmfilePaths []string, asmfilePath string, disableBootstrap bool) *Cmd {
 	return &Cmd{
-		vmfilePaths: vmfilePaths,
-		asmfilePath: asmfilePath,
+		vmfilePaths:      vmfilePaths,
+		asmfilePath:      asmfilePath,
+		disableBootstrap: disableBootstrap,
 	}
 }
 
@@ -77,7 +79,10 @@ func (cmd *Cmd) Run() (err error) {
 	defer out.Close()
 	cw := codewriter.New(out)
 
-	cw.WriteInit()
+	if !cmd.disableBootstrap {
+		cw.WriteInit()
+	}
+
 	for _, vmfilePath := range cmd.vmfilePaths {
 		if err := parse(cw, vmfilePath); err != nil {
 			return err

@@ -10,6 +10,7 @@ import (
 )
 
 var output = flag.String("o", "out.asm", "output file")
+var noBootFlag = flag.Bool("noboot", false, "disable bootstrap")
 
 func usage() {
 	fmt.Println("usage: vmc [-o output] input [input ...]")
@@ -23,7 +24,7 @@ func main() {
 
 	flag.Parse()
 
-	cmd := cmd.New(flag.Args(), *output)
+	cmd := cmd.New(flag.Args(), *output, *noBootFlag)
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
