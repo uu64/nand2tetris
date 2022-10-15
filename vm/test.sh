@@ -24,3 +24,5 @@ go build -o ./vmc
 
 # check "08" "FunctionCalls" "SimpleFunction"
 check "08" "FunctionCalls" "FibonacciElement"
+check "08" "FunctionCalls" "StaticsTest"
+check "08" "FunctionCalls" "NestedCall"
