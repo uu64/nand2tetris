@@ -77,6 +77,7 @@ func (cmd *Cmd) Run() (err error) {
 	defer out.Close()
 	cw := codewriter.New(out)
 
+	cw.WriteInit()
 	for _, vmfilePath := range cmd.vmfilePaths {
 		if err := parse(cw, vmfilePath); err != nil {
 			return err

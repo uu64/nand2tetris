@@ -27,7 +27,11 @@ func New(f io.Writer) *CodeWriter {
 }
 
 func (cw *CodeWriter) WriteInit() {
-	// TODO: impl after SimpleFunction
+	cw.writer.WriteString("@256\n")
+	cw.writer.WriteString("D=A\n")
+	cw.writer.WriteString("@SP\n")
+	cw.writer.WriteString("M=D\n")
+	cw.WriteCall("Sys.init", 0)
 }
 
 func (cw *CodeWriter) SetFileName(name string) {
@@ -289,8 +293,7 @@ func (cw *CodeWriter) WriteIf(label string) error {
 }
 
 func (cw *CodeWriter) WriteCall(functionName string, numArgs int) error {
-	ns := strings.TrimSuffix(cw.inputFileName, filepath.Ext(cw.inputFileName))
-	retAddr := fmt.Sprintf("%s.RET_ADDR\n", ns)
+	retAddr := fmt.Sprintf("%d.RET_ADDR", cw.counter)
 
 	pushAddr := func(addr string) {
 		cw.writer.WriteString(fmt.Sprintf("@%s\n", addr))
@@ -315,10 +318,10 @@ func (cw *CodeWriter) WriteCall(functionName string, numArgs int) error {
 	// push ARG
 	// push THIS
 	// push THAT
-	pushAddr(parser.SEG_LOCAL)
-	pushAddr(parser.SEG_ARG)
-	pushAddr(parser.SEG_THIS)
-	pushAddr(parser.SEG_THAT)
+	pushAddr(memSegMap[parser.SEG_LOCAL])
+	pushAddr(memSegMap[parser.SEG_ARG])
+	pushAddr(memSegMap[parser.SEG_THIS])
+	pushAddr(memSegMap[parser.SEG_THAT])
 
 	// ARG = SP-n-5
 	cw.writer.WriteString("@SP\n")
@@ -341,6 +344,8 @@ func (cw *CodeWriter) WriteCall(functionName string, numArgs int) error {
 
 	// (return-address)
 	cw.writer.WriteString(fmt.Sprintf("(%s)\n", retAddr))
+
+	cw.counter += 1
 	return nil
 }
 

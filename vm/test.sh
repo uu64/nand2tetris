@@ -12,15 +12,15 @@ check() {
 
 go build -o ./vmc
 
-check "07" "StackArithmetic" "SimpleAdd"
-check "07" "StackArithmetic" "StackTest"
+# check "07" "StackArithmetic" "SimpleAdd"
+# check "07" "StackArithmetic" "StackTest"
 
-check "07" "MemoryAccess" "BasicTest"
-check "07" "MemoryAccess" "PointerTest"
-check "07" "MemoryAccess" "StaticTest"
+# check "07" "MemoryAccess" "BasicTest"
+# check "07" "MemoryAccess" "PointerTest"
+# check "07" "MemoryAccess" "StaticTest"
 
-check "08" "ProgramFlow" "BasicLoop"
-check "08" "ProgramFlow" "FibonacciSeries"
+# check "08" "ProgramFlow" "BasicLoop"
+# check "08" "ProgramFlow" "FibonacciSeries"
 
-check "08" "FunctionCalls" "SimpleFunction"
+# check "08" "FunctionCalls" "SimpleFunction"
 check "08" "FunctionCalls" "FibonacciElement"
