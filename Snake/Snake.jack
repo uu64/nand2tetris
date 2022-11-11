@@ -30,7 +30,7 @@ class Snake {
         var SnakeNode added, first;
 
         let first = head.getNext();
-        let added = SnakeNode.new(xVal, yVal, head, first, nodeSize);
+        let added = SnakeNode.new(xVal, yVal, first, head, nodeSize);
 
         do head.setNext(added);
         do first.setPrev(added);

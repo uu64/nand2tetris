@@ -35,7 +35,7 @@ class SnakeGame {
 
         // init snake
         // 127 = nodeSize * 10 + 7
-        let snake = Snake.new(127, 127, 10);
+        let snake = Snake.new(127, 127, 5);
 
         return this;
     }
@@ -59,8 +59,8 @@ class SnakeGame {
     }
 
     method boolean isGameOver() {
-        var int d, headX, headY, nextX, nextY;
-        var SnakeNode head;
+        var int d, headX, headY, nextX, nextY, x, y;
+        var SnakeNode head, n;
 
         let d = snake.getDirection();
         let head = snake.getHead();
@@ -100,6 +100,17 @@ class SnakeGame {
             if (nextX = fieldWMax) {
                 return true;
             }
+        }
+
+        // check if node will be eating itself
+        let n = head;
+        while (~(n = null)) {
+            let x = n.getX();
+            let y = n.getY();
+            if ((x = nextX) & (y = nextY)) {
+                return true;
+            }
+            let n = n.getNext();
         }
 
         return false;
