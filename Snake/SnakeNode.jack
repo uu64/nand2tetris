@@ -1,12 +1,13 @@
 class SnakeNode {
-    field int x, y, nodeSize;
+    field int x, y, direction, nodeSize;
     field SnakeNode next, prev;
 
-    constructor SnakeNode new(int xVal, int yVal, SnakeNode nextPtr, SnakeNode prevPtr, int size) {
+    constructor SnakeNode new(int xVal, int yVal, SnakeNode nextPtr, SnakeNode prevPtr, int d, int size) {
         let x = xVal;
         let y = yVal;
         let next = nextPtr;
         let prev = prevPtr;
+        let direction = d;
         let nodeSize = size;
         return this;
     }
@@ -40,6 +41,10 @@ class SnakeNode {
 
     method int getY() {
         return y;
+    }
+
+    method int getDirection() {
+        return direction;
     }
 
     method SnakeNode getPrev() {

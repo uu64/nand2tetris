@@ -129,7 +129,7 @@ class SnakeGame {
                 } else {
                     do snake.move();
                 }
-                do Sys.wait(50);
+                do Sys.wait(500);
             }
 
             // Left Arrow = 130

@@ -7,33 +7,100 @@ class Snake {
 
     constructor Snake new(int headX, int headY, int initLen) {
         var int i;
+        var SnakeNode n;
 
         let nodeSize = 12;
         let direction = 3;
 
-        let head = SnakeNode.new(-1, -1, null, null, nodeSize);
-        let tail = SnakeNode.new(-1, -1, null, null, nodeSize);
-        do head.setNext(tail);
-        do tail.setPrev(head);
+        let head = SnakeNode.new(-1, -1, null, null, direction, nodeSize);
+        let tail = SnakeNode.new(-1, -1, null, null, direction, nodeSize);
+        let n = SnakeNode.new(headX, headY, null, null, direction, nodeSize);
+        do head.setNext(n);
+        do tail.setPrev(n);
+        do n.show();
 
         let i = 0;
         while (i < initLen) {
-            do addHead(headX, headY);
-            let headX = headX + nodeSize;
+            do addTail();
             let i = i + 1;
         }
 
         return this;
     }
 
-    method void addHead(int xVal, int yVal) {
-        var SnakeNode added, first;
+    method void addHead() {
+        var SnakeNode first, added;
+        var int headX, headY, x, y;
 
         let first = head.getNext();
-        let added = SnakeNode.new(xVal, yVal, first, head, nodeSize);
+        let headX = first.getX();
+        let headY = first.getY();
+
+        // up
+        if (direction = 0) {
+            let x = headX;
+            let y = headY - nodeSize;
+        }
+        // down
+        if (direction = 1) {
+            let x = headX;
+            let y = headY + nodeSize;
+        }
+        // left
+        if (direction = 2) {
+            let x = headX - nodeSize;
+            let y = headY;
+        }
+        // right
+        if (direction = 3) {
+            let x = headX + nodeSize;
+            let y = headY;
+        }
+
+        let added = SnakeNode.new(x, y, first, head, direction, nodeSize);
 
         do head.setNext(added);
         do first.setPrev(added);
+
+        do added.show();
+
+        return;
+    }
+
+    method void addTail() {
+        var SnakeNode last, added;
+        var int lastX, lastY, lastDirection, x, y;
+
+        let last = tail.getPrev();
+        let lastX = last.getX();
+        let lastY = last.getY();
+        let lastDirection = last.getDirection();
+
+        // up
+        if (lastDirection = 0) {
+            let x = lastX;
+            let y = lastY + nodeSize;
+        }
+        // down
+        if (lastDirection = 1) {
+            let x = lastX;
+            let y = lastY - nodeSize;
+        }
+        // left
+        if (lastDirection = 2) {
+            let x = lastX + nodeSize;
+            let y = lastY;
+        }
+        // right
+        if (lastDirection = 3) {
+            let x = lastX - nodeSize;
+            let y = lastY;
+        }
+
+        let added = SnakeNode.new(x, y, tail, last, lastDirection, nodeSize);
+
+        do last.setNext(added);
+        do tail.setPrev(added);
 
         do added.show();
 
@@ -119,19 +186,19 @@ class Snake {
 
         // up
         if (direction = 0) {
-            do addHead(headX, headY - nodeSize);
+            do addHead();
         }
         // down
         if (direction = 1) {
-            do addHead(headX, headY + nodeSize);
+            do addHead();
         }
         // left
         if (direction = 2) {
-            do addHead(headX - nodeSize, headY);
+            do addHead();
         }
         // right
         if (direction = 3) {
-            do addHead(headX + nodeSize, headY);
+            do addHead();
         }
 
         do removeTail();
