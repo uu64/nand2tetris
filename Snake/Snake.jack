@@ -9,7 +9,7 @@ class Snake {
         var int i;
 
         let nodeSize = 12;
-        let direction = 0;
+        let direction = 3;
 
         let head = SnakeNode.new(-1, -1, null, null, nodeSize);
         let tail = SnakeNode.new(-1, -1, null, null, nodeSize);
@@ -18,7 +18,7 @@ class Snake {
 
         let i = 0;
         while (i < initLen) {
-            do add(headX, headY);
+            do addHead(headX, headY);
             let headX = headX + nodeSize;
             let i = i + 1;
         }
@@ -26,44 +26,76 @@ class Snake {
         return this;
     }
 
-    method void add(int xVal, int yVal) {
-        var SnakeNode added, last;
+    method void addHead(int xVal, int yVal) {
+        var SnakeNode added, first;
 
-        let last = tail.getPrev();
-        let added = SnakeNode.new(xVal, yVal, last, tail, nodeSize);
+        let first = head.getNext();
+        let added = SnakeNode.new(xVal, yVal, head, first, nodeSize);
 
-        do tail.setPrev(added);
-        do last.setNext(added);
+        do head.setNext(added);
+        do first.setPrev(added);
+
+        do added.show();
 
         return;
     }
 
-    method void remove() {
-        var SnakeNode last, tmp;
+    method void removeTail() {
+        var SnakeNode removed, last;
 
-        let last = tail.getPrev();
-        let tmp = last.getPrev();
-        do tail.setPrev(tmp);
-        do tmp.setNext(tail);
+        let removed = tail.getPrev();
+        let last = removed.getPrev();
 
-        do last.hide();
-        do last.dispose();
+        do tail.setPrev(last);
+        do last.setNext(tail);
+
+        do removed.hide();
+        do removed.dispose();
 
         return;
     }
 
     method void dispose() {
-        if (~(head = null)) {
-            do head.dispose();
+        var SnakeNode n;
+
+        let n = head;
+        while (~(n = null)) {
+            do n.dispose();
+            let n = n.getNext();
         }
 
         do Memory.deAlloc(this);
         return;
     }
 
-    method void show() {
-        do Screen.setColor(true);
-        do draw();
+    method SnakeNode getHead() {
+        return head.getNext();
+    }
+
+    method SnakeNode getTail() {
+        return tail.getPrev();
+    }
+
+    method int getDirection() {
+        return direction;
+    }
+
+    method void setDirection(int d) {
+        if ((direction = 0) | (direction = 1)) {
+            if ((d = 0) | (d = 1)) {
+                // do nothing
+                return;
+            }
+        }
+
+        if ((direction = 2) | (direction = 3)) {
+            if ((d = 2) | (d = 3)) {
+                // do nothing
+                return;
+            }
+        }
+
+        let direction = d;
         return;
     }
 
@@ -78,16 +110,31 @@ class Snake {
     }
 
     method void move() {
+        var SnakeNode n;
         var int headX, headY;
-        // let headX
+
+        let n = head.getNext();
+        let headX = n.getX();
+        let headY = n.getY();
+
         // up
-        if (direction = 0) {}
+        if (direction = 0) {
+            do addHead(headX, headY - nodeSize);
+        }
         // down
-        if (direction = 1) {}
+        if (direction = 1) {
+            do addHead(headX, headY + nodeSize);
+        }
         // left
-        if (direction = 2) {}
+        if (direction = 2) {
+            do addHead(headX - nodeSize, headY);
+        }
         // right
-        if (direction = 3) {}
+        if (direction = 3) {
+            do addHead(headX + nodeSize, headY);
+        }
+
+        do removeTail();
 
         return;
     }

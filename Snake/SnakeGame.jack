@@ -13,22 +13,26 @@ class SnakeGame {
     field int fieldHMax;
 
     constructor SnakeGame new() {
-        let snake = Snake.new(150, 100, 5);
         let exit = false;
+
+        // 367 = 12 * 30 + 7
         let fieldWMin = 7;
         let fieldWMax = 367;
+
+        // 247 = 12 * 20 + 7
         let fieldHMin = 7;
         let fieldHMax = 247;
 
         do Screen.clearScreen();
 
-        // draw field
+        // init field
         do Screen.setColor(true);
         do Screen.drawRectangle(fieldWMin, fieldHMin, fieldWMax, fieldHMax);
         do Screen.setColor(false);
         do Screen.drawRectangle(fieldWMin+1, fieldHMin+1, fieldWMax-1, fieldHMax-1);
 
-        do snake.show();
+        // init snake
+        let snake = Snake.new(fieldWMin, fieldHMin, 10);
 
         return this;
     }
@@ -47,13 +51,99 @@ class SnakeGame {
         return;
     }
 
+    method boolean checkEating() {
+        return true;
+    }
+
+    method boolean isGameOver() {
+        var int d, headX, headY, nextX, nextY;
+        var SnakeNode head;
+
+        let d = snake.getDirection();
+        let head = snake.getHead();
+
+        // check if node will be inside the wall
+        let headX = head.getX();
+        let headY = head.getY();
+
+        // up
+        if (d = 0) {
+            let nextX = headX;
+            let nextY = headY - 12;
+            if (nextY < fieldHMin) {
+                return true;
+            }
+        }
+        // down
+        if (d = 1) {
+            let nextX = headX;
+            let nextY = headY + 12;
+            if (nextY = fieldHMax) {
+                return true;
+            }
+        }
+        // left
+        if (d = 2) {
+            let nextX = headX - 12;
+            let nextY = headY;
+            if (nextX < fieldWMin) {
+                return true;
+            }
+        }
+        // right
+        if (d = 3) {
+            let nextX = headX + 12;
+            let nextY = headY;
+            if (nextX = fieldWMax) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     method void run() {
+        var char key;
+
         while (~exit) {
-            if (exit) {
-                // do nothing
+            // waits for a key to be pressed.
+            while ((key = 0) & (~exit)) {
+                let key = Keyboard.keyPressed();
+
+                if (isGameOver()) {
+                    let exit = true;
+                } else {
+                    do snake.move();
+                }
+                do Sys.wait(50);
             }
 
-            return;
+            // Left Arrow = 130
+            // Up Arrow = 131
+            // Right Arrow = 132
+            // Down Arrow = 133
+            if (key = 131) {
+                do snake.setDirection(0);
+            }
+            if (key = 133) {
+                do snake.setDirection(1);
+            }
+            if (key = 130) {
+                do snake.setDirection(2);
+            }
+            if (key = 132) {
+                do snake.setDirection(3);
+            }
+
+            let key = 0;
         }
+
+
+        if (exit) {
+            do Output.moveCursor(10,19);
+	        do Output.printString("Game Over");
+        }
+
+        return;
     }
 }

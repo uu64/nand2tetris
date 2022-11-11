@@ -2,11 +2,6 @@ function SnakeGame.new 0
 push constant 6
 call Memory.alloc 1
 pop pointer 0
-push constant 150
-push constant 100
-push constant 5
-call Snake.new 3
-pop this 0
 push constant 0
 pop this 1
 push constant 7
@@ -46,9 +41,11 @@ push constant 1
 sub
 call Screen.drawRectangle 4
 pop temp 0
-push this 0
-call Snake.show 1
-pop temp 0
+push this 2
+push this 4
+push constant 10
+call Snake.new 3
+pop this 0
 push pointer 0
 return
 function SnakeGame.newInstance 0
@@ -67,7 +64,122 @@ call Memory.deAlloc 1
 pop temp 0
 push constant 0
 return
-function SnakeGame.run 0
+function SnakeGame.checkEating 0
+push argument 0
+pop pointer 0
+push constant 0
+not
+return
+function SnakeGame.isGameOver 6
+push argument 0
+pop pointer 0
+push this 0
+call Snake.getDirection 1
+pop local 0
+push this 0
+call Snake.getHead 1
+pop local 5
+push local 5
+call SnakeNode.getX 1
+pop local 1
+push local 5
+call SnakeNode.getY 1
+pop local 2
+push local 0
+push constant 0
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 1
+pop local 3
+push local 2
+push constant 12
+sub
+pop local 4
+push local 4
+push this 4
+lt
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+not
+return
+label IF_FALSE1
+label IF_FALSE0
+push local 0
+push constant 1
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push local 1
+pop local 3
+push local 2
+push constant 12
+add
+pop local 4
+push local 4
+push this 5
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 0
+not
+return
+label IF_FALSE3
+label IF_FALSE2
+push local 0
+push constant 2
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push local 1
+push constant 12
+sub
+pop local 3
+push local 2
+pop local 4
+push local 3
+push this 2
+lt
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push constant 0
+not
+return
+label IF_FALSE5
+label IF_FALSE4
+push local 0
+push constant 3
+eq
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push local 1
+push constant 12
+add
+pop local 3
+push local 2
+pop local 4
+push local 3
+push this 3
+eq
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push constant 0
+not
+return
+label IF_FALSE7
+label IF_FALSE6
+push constant 0
+return
+function SnakeGame.run 1
 push argument 0
 pop pointer 0
 label WHILE_EXP0
@@ -75,12 +187,114 @@ push this 1
 not
 not
 if-goto WHILE_END0
+label WHILE_EXP1
+push local 0
+push constant 0
+eq
 push this 1
+not
+and
+not
+if-goto WHILE_END1
+call Keyboard.keyPressed 0
+pop local 0
+push pointer 0
+call SnakeGame.isGameOver 1
 if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
-label IF_FALSE0
 push constant 0
-return
+not
+pop this 1
+goto IF_END0
+label IF_FALSE0
+push this 0
+call Snake.move 1
+pop temp 0
+label IF_END0
+push constant 50
+call Sys.wait 1
+pop temp 0
+goto WHILE_EXP1
+label WHILE_END1
+push local 0
+push constant 131
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push this 0
+push constant 0
+call Snake.setDirection 2
+pop temp 0
+label IF_FALSE1
+push local 0
+push constant 133
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push this 0
+push constant 1
+call Snake.setDirection 2
+pop temp 0
+label IF_FALSE2
+push local 0
+push constant 130
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push this 0
+push constant 2
+call Snake.setDirection 2
+pop temp 0
+label IF_FALSE3
+push local 0
+push constant 132
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push this 0
+push constant 3
+call Snake.setDirection 2
+pop temp 0
+label IF_FALSE4
+push constant 0
+pop local 0
 goto WHILE_EXP0
 label WHILE_END0
+push this 1
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push constant 10
+push constant 19
+call Output.moveCursor 2
+pop temp 0
+push constant 9
+call String.new 1
+push constant 71
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 109
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 79
+call String.appendChar 2
+push constant 118
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+label IF_FALSE5
+push constant 0
+return

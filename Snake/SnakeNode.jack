@@ -12,9 +12,9 @@ class SnakeNode {
     }
 
     method void dispose() {
-        if (~(next = null)) {
-            do next.dispose();
-        }
+        // if (~(next = null)) {
+        //     do next.dispose();
+        // }
 
         do Memory.deAlloc(this);
         return;
