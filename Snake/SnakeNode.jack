@@ -1,0 +1,66 @@
+class SnakeNode {
+    field int x, y, nodeSize;
+    field SnakeNode next, prev;
+
+    constructor SnakeNode new(int xVal, int yVal, SnakeNode nextPtr, SnakeNode prevPtr, int size) {
+        let x = xVal;
+        let y = yVal;
+        let next = nextPtr;
+        let prev = prevPtr;
+        let nodeSize = size;
+        return this;
+    }
+
+    method void dispose() {
+        if (~(next = null)) {
+            do next.dispose();
+        }
+
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void show() {
+        do Screen.setColor(true);
+        do draw();
+        return;
+    }
+
+    method void hide() {
+        do Screen.setColor(false);
+        do draw();
+        return;
+    }
+
+    method void draw() {
+        // line width: 1
+        do Screen.drawRectangle(x+1, y+1, x+nodeSize-1, y+nodeSize-1);
+        return;
+    }
+
+    method int getX() {
+        return x;
+    }
+
+    method int getY() {
+        return y;
+    }
+
+    method SnakeNode getPrev() {
+        return prev;
+    }
+
+    method SnakeNode getNext() {
+        return next;
+    }
+
+    method void setPrev(SnakeNode node) {
+        let prev = node;
+        return;
+    }
+
+    method void setNext(SnakeNode node) {
+        let next = node;
+        return;
+    }
+}

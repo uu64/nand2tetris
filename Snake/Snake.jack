@@ -1,0 +1,94 @@
+class Snake {
+    field int nodeSize;
+    // 0: up, 1: down, 2: left, 3: right
+    field int direction;
+
+    field SnakeNode head, tail;
+
+    constructor Snake new(int headX, int headY, int initLen) {
+        var int i;
+
+        let nodeSize = 12;
+        let direction = 0;
+
+        let head = SnakeNode.new(-1, -1, null, null, nodeSize);
+        let tail = SnakeNode.new(-1, -1, null, null, nodeSize);
+        do head.setNext(tail);
+        do tail.setPrev(head);
+
+        let i = 0;
+        while (i < initLen) {
+            do add(headX, headY);
+            let headX = headX + nodeSize;
+            let i = i + 1;
+        }
+
+        return this;
+    }
+
+    method void add(int xVal, int yVal) {
+        var SnakeNode added, last;
+
+        let last = tail.getPrev();
+        let added = SnakeNode.new(xVal, yVal, last, tail, nodeSize);
+
+        do tail.setPrev(added);
+        do last.setNext(added);
+
+        return;
+    }
+
+    method void remove() {
+        var SnakeNode last, tmp;
+
+        let last = tail.getPrev();
+        let tmp = last.getPrev();
+        do tail.setPrev(tmp);
+        do tmp.setNext(tail);
+
+        do last.hide();
+        do last.dispose();
+
+        return;
+    }
+
+    method void dispose() {
+        if (~(head = null)) {
+            do head.dispose();
+        }
+
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void show() {
+        do Screen.setColor(true);
+        do draw();
+        return;
+    }
+
+    method void draw() {
+        var SnakeNode node;
+        let node = head.getNext();
+        while (~(node.getNext() = null)) {
+            do node.show();
+            let node = node.getNext();
+        }
+        return;
+    }
+
+    method void move() {
+        var int headX, headY;
+        // let headX
+        // up
+        if (direction = 0) {}
+        // down
+        if (direction = 1) {}
+        // left
+        if (direction = 2) {}
+        // right
+        if (direction = 3) {}
+
+        return;
+    }
+}
