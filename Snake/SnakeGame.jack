@@ -3,6 +3,7 @@ class SnakeGame {
 
     field Snake snake;
     field boolean exit;
+    field int nodeSize, initX, initY;
 
     // field width = [0, 511]
     field int fieldWMin;
@@ -14,12 +15,13 @@ class SnakeGame {
 
     constructor SnakeGame new() {
         let exit = false;
+        let nodeSize = 12;
 
-        // 367 = 12 * 30 + 7
+        // 367 = nodeSize * 30 + 7
         let fieldWMin = 7;
         let fieldWMax = 367;
 
-        // 247 = 12 * 20 + 7
+        // 247 = nodeSize * 20 + 7
         let fieldHMin = 7;
         let fieldHMax = 247;
 
@@ -32,7 +34,8 @@ class SnakeGame {
         do Screen.drawRectangle(fieldWMin+1, fieldHMin+1, fieldWMax-1, fieldHMax-1);
 
         // init snake
-        let snake = Snake.new(fieldWMin, fieldHMin, 10);
+        // 127 = nodeSize * 10 + 7
+        let snake = Snake.new(127, 127, 10);
 
         return this;
     }
@@ -69,7 +72,7 @@ class SnakeGame {
         // up
         if (d = 0) {
             let nextX = headX;
-            let nextY = headY - 12;
+            let nextY = headY - nodeSize;
             if (nextY < fieldHMin) {
                 return true;
             }
@@ -77,14 +80,14 @@ class SnakeGame {
         // down
         if (d = 1) {
             let nextX = headX;
-            let nextY = headY + 12;
+            let nextY = headY + nodeSize;
             if (nextY = fieldHMax) {
                 return true;
             }
         }
         // left
         if (d = 2) {
-            let nextX = headX - 12;
+            let nextX = headX - nodeSize;
             let nextY = headY;
             if (nextX < fieldWMin) {
                 return true;
@@ -92,7 +95,7 @@ class SnakeGame {
         }
         // right
         if (d = 3) {
-            let nextX = headX + 12;
+            let nextX = headX + nodeSize;
             let nextY = headY;
             if (nextX = fieldWMax) {
                 return true;
