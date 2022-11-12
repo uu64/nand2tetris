@@ -71,6 +71,10 @@ class SnakeGame {
 
     method void dispose() {
         do Memory.deAlloc(this);
+        do snake.dispose();
+        do feed.dispose();
+        do randW.dispose();
+        do randH.dispose();
         return;
     }
 

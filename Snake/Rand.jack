@@ -29,4 +29,9 @@ class Rand {
 
         return seed;
     }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
 }
