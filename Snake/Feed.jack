@@ -1,0 +1,58 @@
+class Feed {
+    field int x, y;
+
+    constructor Feed new(int xVal, int yVal) {
+        let x = xVal;
+        let y = yVal;
+
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void put(int xVal, int yVal) {
+        let x = xVal;
+        let y = yVal;
+
+        do show();
+        return;
+    }
+
+    method void show() {
+        do Screen.setColor(true);
+        do draw();
+        return;
+    }
+
+    method void hide() {
+        do Screen.setColor(false);
+        do draw();
+        return;
+    }
+
+    method void draw() {
+        do Screen.drawRectangle(x+4, y+4, x+8, y+8);
+        return;
+    }
+
+    method int getX() {
+        return x;
+    }
+
+    method int getY() {
+        return y;
+    }
+
+    method void setX(int xVal) {
+        let x = xVal;
+        return;
+    }
+
+    method void setY(int yVal) {
+        let y = yVal;
+        return;
+    }
+}

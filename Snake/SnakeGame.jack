@@ -2,6 +2,11 @@ class SnakeGame {
     static SnakeGame instance;
 
     field Snake snake;
+    field Feed feed;
+    field Rand randW;
+    field Rand randH;
+    field int score;
+    field int wait;
     field boolean exit;
     field int nodeSize, initX, initY;
 
@@ -16,6 +21,8 @@ class SnakeGame {
     constructor SnakeGame new() {
         let exit = false;
         let nodeSize = 12;
+
+        let wait = 500;
 
         // 367 = nodeSize * 30 + 7
         let fieldWMin = 7;
@@ -37,6 +44,19 @@ class SnakeGame {
         // 127 = nodeSize * 10 + 7
         let snake = Snake.new(127, 127, 5);
 
+        // init feed
+        // 67 = nodeSize * 5 + 7
+        let feed = Feed.new(67, 67);
+        do feed.show();
+
+        // init rand
+        let randW = Rand.new(28, 20, 30, 2);
+        let randH = Rand.new(1, 16, 20, 19);
+
+        // init score
+        let score = 0;
+        do refreshScore();
+
         return this;
     }
 
@@ -54,8 +74,30 @@ class SnakeGame {
         return;
     }
 
-    method boolean checkEating() {
-        return true;
+    method void refreshScore() {
+        do Output.moveCursor(5, 48);
+        do Output.printString("SCORE: ");
+        do Output.moveCursor(5, 55);
+        do Output.printInt(score);
+        return;
+    }
+
+    method boolean isEating() {
+        var int headX, headY, feedX, feedY;
+        var SnakeNode head, n;
+
+        let head = snake.getHead();
+        let headX = head.getX();
+        let headY = head.getY();
+
+        let feedX = feed.getX();
+        let feedY = feed.getY();
+
+        if ((feedX = headX) & (feedY = headY)) {
+            return true;
+        }
+
+        return false;
     }
 
     method boolean isGameOver() {
@@ -118,6 +160,7 @@ class SnakeGame {
 
     method void run() {
         var char key;
+        var int rw, rh;
 
         while (~exit) {
             // waits for a key to be pressed.
@@ -128,8 +171,25 @@ class SnakeGame {
                     let exit = true;
                 } else {
                     do snake.move();
+
+                    if (isEating()) {
+                        let score = score + 50;
+
+                        do refreshScore();
+                        do snake.addTail();
+
+                        let rw = randW.get();
+                        let rw = rw * nodeSize;
+                        let rh = randH.get();
+                        let rh = rh * nodeSize;
+                        do feed.put(rw+7, rh+7);
+
+                        if (wait > 100) {
+                            let wait = wait - 50;
+                        }
+                    }
                 }
-                do Sys.wait(500);
+                do Sys.wait(wait);
             }
 
             // Left Arrow = 130
@@ -154,8 +214,8 @@ class SnakeGame {
 
 
         if (exit) {
-            do Output.moveCursor(10,19);
-	        do Output.printString("Game Over");
+            do Output.moveCursor(10, 19);
+            do Output.printString("Game Over");
         }
 
         return;

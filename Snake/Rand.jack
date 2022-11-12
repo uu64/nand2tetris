@@ -1,0 +1,32 @@
+class Rand {
+    field int a, c, m, seed;
+
+    constructor Rand new(int va, int vc, int vm, int s) {
+        let a = va;
+        let c = vc;
+        let m = vm;
+        let seed = s;
+        return this;
+    }
+
+    method int mod(int x, int y) {
+        var int div, tmp;
+
+        if (x < y) {
+            return x;
+        }
+
+        let div = x / y;
+        let tmp = div * y;
+        return x - tmp;
+    }
+
+    method int get() {
+        var int tmp;
+        let tmp = a * seed;
+        let tmp = tmp + c;
+        let seed = mod(tmp, m);
+
+        return seed;
+    }
+}
