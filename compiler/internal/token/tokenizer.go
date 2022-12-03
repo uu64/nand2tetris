@@ -9,7 +9,6 @@ import (
 
 type Tokenizer struct {
 	reader        *bufio.Reader
-	prev          *rune
 	hasMoreTokens bool
 	tkType        TokenType
 
@@ -112,18 +111,6 @@ func (t *Tokenizer) consumeWhiteSpace() (rune, error) {
 }
 
 func (t *Tokenizer) tokenize() error {
-	if t.prev != nil {
-		if f, symbol := isSymbol(*t.prev); f {
-			fmt.Println("↓ is token")
-			fmt.Println(string(*t.prev))
-
-			t.tkType = TkSymbol
-			t.symbol = *symbol
-			t.prev = nil
-			return nil
-		}
-	}
-
 	next, err := t.consumeWhiteSpace()
 	if err != nil {
 		if err == io.EOF {
@@ -139,7 +126,6 @@ func (t *Tokenizer) tokenize() error {
 
 		t.tkType = TkSymbol
 		t.symbol = *symbol
-		t.prev = nil
 		return nil
 	}
 
@@ -155,8 +141,9 @@ func (t *Tokenizer) tokenize() error {
 		}
 
 		if f, _ := isSymbol(r); f || unicode.IsSpace(r) {
-			// 次の呼び出し時に評価する
-			t.prev = &r
+			if err := t.reader.UnreadRune(); err != nil {
+				return err
+			}
 			break
 		}
 
