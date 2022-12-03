@@ -97,21 +97,50 @@ func (t *Tokenizer) StringVal() (v string, err error) {
 	return
 }
 
-func (t *Tokenizer) consumeWhiteSpace() (rune, error) {
+func (t *Tokenizer) consumeWhiteSpaces() error {
 	for {
-		r, _, err := t.reader.ReadRune()
+		next, _, err := t.reader.ReadRune()
 		if err != nil {
-			return r, err
+			return err
 		}
 
-		if !unicode.IsSpace(r) {
-			return r, nil
+		if !unicode.IsSpace(next) {
+			break
 		}
 	}
+	// 連続した空白の次の最初の一文字を読んでいるので戻す
+	return t.reader.UnreadRune()
+}
+
+func (t *Tokenizer) consumeInlineComment() error {
+	// 行末まで読む
+	if _, err := t.reader.ReadString('\n'); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *Tokenizer) consumeMultilineComment() error {
+	// '*/'まで読む
+	for {
+		if _, err := t.reader.ReadString('*'); err != nil {
+			return err
+		}
+
+		r, _, err := t.reader.ReadRune()
+		if err != nil {
+			return err
+		}
+
+		if r == rune('/') {
+			break
+		}
+	}
+	return nil
 }
 
 func (t *Tokenizer) tokenize() error {
-	next, err := t.consumeWhiteSpace()
+	r, _, err := t.reader.ReadRune()
 	if err != nil {
 		if err == io.EOF {
 			t.hasMoreTokens = false
@@ -120,16 +149,46 @@ func (t *Tokenizer) tokenize() error {
 		return err
 	}
 
-	if f, symbol := isSymbol(next); f {
-		fmt.Println("↓ is token")
-		fmt.Println(string(next))
+	// 空白の場合、後に連続する空白をすべて読んでreturn
+	if unicode.IsSpace(r) {
+		return t.consumeWhiteSpaces()
+	}
+
+	// コメントの場合、コメントをすべて読んでreturn
+	if r == rune('/') {
+		next, _, err := t.reader.ReadRune()
+		if err != nil {
+			if err == io.EOF {
+				t.hasMoreTokens = false
+				return nil
+			}
+			return err
+		}
+
+		// '//'または'/*'で始まる場合はコメントと判定
+		if next == rune('/') {
+			return t.consumeInlineComment()
+		}
+		if next == rune('*') {
+			return t.consumeMultilineComment()
+		}
+
+		// 先読みした分をUnread
+		if err := t.reader.UnreadRune(); err != nil {
+			return err
+		}
+	}
+
+	// symbolかチェック
+	if f, symbol := isSymbol(r); f {
+		fmt.Printf("symbol: %s\n", string(r))
 
 		t.tkType = TkSymbol
 		t.symbol = *symbol
 		return nil
 	}
 
-	runes := []rune{next}
+	runes := []rune{r}
 	for {
 		r, _, err := t.reader.ReadRune()
 		if err != nil {
@@ -151,17 +210,15 @@ func (t *Tokenizer) tokenize() error {
 	}
 
 	s := string(runes)
+
 	if f, kwd := isKeyword(s); f {
-		fmt.Println("↓ is keyword")
-		fmt.Println(s)
+		fmt.Printf("keyword: %s\n", s)
 
 		t.tkType = TkKeyword
 		t.keyword = *kwd
 		return nil
-
 	}
 
-	fmt.Println("↓ is unknown")
-	fmt.Println(s)
+	fmt.Printf("unknown: %s\n", s)
 	return nil
 }
