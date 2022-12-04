@@ -12,7 +12,7 @@ type Tokenizer struct {
 	hasMoreTokens bool
 	tkType        TokenType
 
-	keyword kwd
+	keyword Kwd
 	symbol  rune
 	id      string
 	intVal  int
@@ -47,13 +47,13 @@ func (t *Tokenizer) TokenType() TokenType {
 	return t.tkType
 }
 
-func (t *Tokenizer) Keyword() (id KwdID, err error) {
+func (t *Tokenizer) Keyword() (kwd Kwd, err error) {
 	if t.tkType != TkKeyword {
 		err = fmt.Errorf("Keyword: token type is invalid: %d", t.tkType)
 		return
 	}
 
-	id = t.keyword.id
+	kwd = t.keyword
 	return
 }
 
@@ -139,13 +139,16 @@ func (t *Tokenizer) consumeMultilineComment() error {
 	return nil
 }
 
-func (t *Tokenizer) tokenize() error {
-	r, _, err := t.reader.ReadRune()
-	if err != nil {
+func (t *Tokenizer) tokenize() (err error) {
+	defer func() {
 		if err == io.EOF {
 			t.hasMoreTokens = false
-			return nil
+			err = nil
 		}
+	}()
+
+	r, _, err := t.reader.ReadRune()
+	if err != nil {
 		return err
 	}
 
@@ -158,10 +161,6 @@ func (t *Tokenizer) tokenize() error {
 	if r == rune('/') {
 		next, _, err := t.reader.ReadRune()
 		if err != nil {
-			if err == io.EOF {
-				t.hasMoreTokens = false
-				return nil
-			}
 			return err
 		}
 
@@ -180,30 +179,35 @@ func (t *Tokenizer) tokenize() error {
 	}
 
 	// symbolかチェック
-	if f, symbol := isSymbol(r); f {
-		fmt.Printf("symbol: %s\n", string(r))
-
+	if symbol := toSymbol(r); symbol != nil {
 		t.tkType = TkSymbol
 		t.symbol = *symbol
 		return nil
 	}
 
+	// 一文字目が'"'の場合、文字列としてparse
+	isStrConst := r == rune('"')
+
 	runes := []rune{r}
 	for {
 		r, _, err := t.reader.ReadRune()
 		if err != nil {
-			if err == io.EOF {
-				t.hasMoreTokens = false
-				return nil
-			}
 			return err
 		}
 
-		if f, _ := isSymbol(r); f || unicode.IsSpace(r) {
-			if err := t.reader.UnreadRune(); err != nil {
-				return err
+		// 文字列の場合'"', それ以外の場合シンボルまたは空白が見つかったらbreak
+		if isStrConst {
+			if r == rune('"') {
+				runes = append(runes, r)
+				break
 			}
-			break
+		} else {
+			if symbol := toSymbol(r); symbol != nil || unicode.IsSpace(r) {
+				if err := t.reader.UnreadRune(); err != nil {
+					return err
+				}
+				break
+			}
 		}
 
 		runes = append(runes, r)
@@ -211,14 +215,29 @@ func (t *Tokenizer) tokenize() error {
 
 	s := string(runes)
 
-	if f, kwd := isKeyword(s); f {
-		fmt.Printf("keyword: %s\n", s)
-
+	if kwd := toKeyword(s); kwd != nil {
 		t.tkType = TkKeyword
 		t.keyword = *kwd
 		return nil
 	}
 
-	fmt.Printf("unknown: %s\n", s)
-	return nil
+	if i := toIntConst(s); i != nil {
+		t.tkType = TkIntConst
+		t.intVal = *i
+		return nil
+	}
+
+	if str := toStrConst(s); str != nil {
+		t.tkType = TkStringConst
+		t.strVal = *str
+		return nil
+	}
+
+	if id := toID(s); id != nil {
+		t.tkType = TkIdentifier
+		t.id = *id
+		return nil
+	}
+
+	return fmt.Errorf("unexpected statement: %s", s)
 }
