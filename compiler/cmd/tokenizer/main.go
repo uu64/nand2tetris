@@ -56,6 +56,7 @@ func (cmd *Cmd) parse() (*bytes.Buffer, error) {
 		}
 
 		tkType := t.TokenType()
+		// TODO: xmlライブラリ使う
 		switch tkType {
 		case token.TkKeyword:
 			if v, err := t.Keyword(); err != nil {
