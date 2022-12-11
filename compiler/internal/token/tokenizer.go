@@ -63,7 +63,16 @@ func (t *Tokenizer) Symbol() (symbol string, err error) {
 		return
 	}
 
-	symbol = string(t.symbol)
+	switch t.symbol {
+	case rune('<'):
+		symbol = "&lt;"
+	case rune('>'):
+		symbol = "&gt;"
+	case rune('&'):
+		symbol = "&amp;"
+	default:
+		symbol = string(t.symbol)
+	}
 	return
 }
 
@@ -154,6 +163,7 @@ func (t *Tokenizer) tokenize() (err error) {
 
 	// 空白の場合、後に連続する空白をすべて読んでreturn
 	if unicode.IsSpace(r) {
+		t.tkType = TkWhiteSpace
 		return t.consumeWhiteSpaces()
 	}
 
@@ -166,13 +176,15 @@ func (t *Tokenizer) tokenize() (err error) {
 
 		// '//'または'/*'で始まる場合はコメントと判定
 		if next == rune('/') {
+			t.tkType = TkComment
 			return t.consumeInlineComment()
 		}
 		if next == rune('*') {
+			t.tkType = TkComment
 			return t.consumeMultilineComment()
 		}
 
-		// 先読みした分をUnread
+		// コメントではない場合, 先読みした分をUnread
 		if err := t.reader.UnreadRune(); err != nil {
 			return err
 		}

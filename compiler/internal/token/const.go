@@ -13,6 +13,8 @@ const (
 	TkIdentifier
 	TkIntConst
 	TkStringConst
+	TkWhiteSpace
+	TkComment
 )
 
 type Kwd int
