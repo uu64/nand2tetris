@@ -47,52 +47,52 @@ func (t *Tokenizer) TokenType() TokenType {
 	return t.tkType
 }
 
-func (t *Tokenizer) Keyword() (kwd Keyword, err error) {
+func (t *Tokenizer) Keyword() (kwd *Keyword, err error) {
 	if t.tkType != TkKeyword {
 		err = fmt.Errorf("Keyword: token type is invalid: %d", t.tkType)
 		return
 	}
 
-	kwd = t.keyword
+	kwd = &t.keyword
 	return
 }
 
-func (t *Tokenizer) Symbol() (symbol Symbol, err error) {
+func (t *Tokenizer) Symbol() (symbol *Symbol, err error) {
 	if t.tkType != TkSymbol {
 		err = fmt.Errorf("Symbol: token type is invalid: %d", t.tkType)
 		return
 	}
-	symbol = t.symbol
+	symbol = &t.symbol
 	return
 }
 
-func (t *Tokenizer) Identifier() (id Identifier, err error) {
+func (t *Tokenizer) Identifier() (id *Identifier, err error) {
 	if t.tkType != TkIdentifier {
 		err = fmt.Errorf("Identifier: token type is invalid: %d", t.tkType)
 		return
 	}
 
-	id = t.id
+	id = &t.id
 	return
 }
 
-func (t *Tokenizer) IntVal() (v IntConst, err error) {
+func (t *Tokenizer) IntVal() (v *IntConst, err error) {
 	if t.tkType != TkIntConst {
 		err = fmt.Errorf("IntVal: token type is invalid: %d", t.tkType)
 		return
 	}
 
-	v = t.intVal
+	v = &t.intVal
 	return
 }
 
-func (t *Tokenizer) StringVal() (v StringConst, err error) {
+func (t *Tokenizer) StringVal() (v *StringConst, err error) {
 	if t.tkType != TkStringConst {
 		err = fmt.Errorf("StringVal: token type is invalid: %d", t.tkType)
 		return
 	}
 
-	v = t.strVal
+	v = &t.strVal
 	return
 }
 
@@ -151,14 +151,15 @@ func (t *Tokenizer) tokenize() (err error) {
 		return
 	}
 
-	// 空白の場合、後に連続する空白をすべて読んでreturn
+	// 空白の場合、後に連続する空白をすべて読んでrerun
 	if unicode.IsSpace(r) {
 		t.tkType = TkWhiteSpace
 		err = t.consumeWhiteSpaces()
+		err = t.tokenize()
 		return
 	}
 
-	// コメントの場合、コメントをすべて読んでreturn
+	// コメントの場合、コメントをすべて読んでrerun
 	if r == rune('/') {
 		next, _, e := t.reader.ReadRune()
 		if e != nil {
@@ -170,11 +171,13 @@ func (t *Tokenizer) tokenize() (err error) {
 		if next == rune('/') {
 			t.tkType = TkComment
 			err = t.consumeInlineComment()
+			err = t.tokenize()
 			return
 		}
 		if next == rune('*') {
 			t.tkType = TkComment
 			err = t.consumeMultilineComment()
+			err = t.tokenize()
 			return
 		}
 

@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/uu64/nand2tetris/compiler/internal/compile"
 	"github.com/uu64/nand2tetris/compiler/internal/token"
 )
 
@@ -40,62 +41,20 @@ func (cmd *Cmd) write(b []byte) error {
 	return nil
 }
 
-func (cmd *Cmd) parse() (*bytes.Buffer, error) {
+func (cmd *Cmd) compile() (*bytes.Buffer, error) {
 	f, err := os.Open(cmd.source)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	t := token.New(f)
-
-	tokens := &token.Tokens{
-		Tokens: []token.Token{},
+	compiler := compile.New(token.New(f))
+	class, err := compiler.CompileClass()
+	if err != nil {
+		return nil, err
 	}
 
-	for t.HasMoreTokens() {
-		if err := t.Advance(); err != nil {
-			return nil, err
-		}
-
-		tkType := t.TokenType()
-		switch tkType {
-		case token.TkKeyword:
-			v, err := t.Keyword()
-			if err != nil {
-				return nil, err
-			}
-			tokens.Tokens = append(tokens.Tokens, *v)
-		case token.TkSymbol:
-			v, err := t.Symbol()
-			if err != nil {
-				return nil, err
-			}
-			tokens.Tokens = append(tokens.Tokens, *v)
-		case token.TkIdentifier:
-			v, err := t.Identifier()
-			if err != nil {
-				return nil, err
-			}
-			tokens.Tokens = append(tokens.Tokens, *v)
-		case token.TkIntConst:
-			v, err := t.IntVal()
-			if err != nil {
-				return nil, err
-			}
-			tokens.Tokens = append(tokens.Tokens, *v)
-		case token.TkStringConst:
-			v, err := t.StringVal()
-			if err != nil {
-				return nil, err
-			}
-			tokens.Tokens = append(tokens.Tokens, *v)
-		default:
-			continue
-		}
-	}
-
-	b, err := xml.MarshalIndent(tokens, "", "  ")
+	b, err := xml.MarshalIndent(class, "", "  ")
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +67,7 @@ func New(source, output string) *Cmd {
 }
 
 func (cmd *Cmd) Run() (err error) {
-	buf, err := cmd.parse()
+	buf, err := cmd.compile()
 	if err != nil {
 		return err
 	}
@@ -144,7 +103,7 @@ func main() {
 	if ext != ".jack" {
 		log.Fatalf("invalid extention: %s\n", ext)
 	}
-	output := fmt.Sprintf("%s/%sT.xml", dir, base[0:len(base)-len(ext)])
+	output := fmt.Sprintf("%s/%s.xml", dir, base[0:len(base)-len(ext)])
 
 	// TODO: directoryかファイル単体を渡す
 	cmd := New(abs, output)

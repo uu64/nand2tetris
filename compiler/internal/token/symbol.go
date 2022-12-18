@@ -27,6 +27,7 @@ var symbols = []rune{
 type Symbol struct {
 	XMLName xml.Name `xml:"symbol"`
 	Label   string   `xml:",chardata"`
+	val     rune     `xml:"-"`
 }
 
 func (tk Symbol) TokenType() TokenType {
@@ -34,14 +35,16 @@ func (tk Symbol) TokenType() TokenType {
 }
 
 func (tk Symbol) Val() rune {
-	// TODO: stringをxml unescapeしてruneにする処理を後で実装する
-	return rune('-')
+	return tk.val
 }
 
 func toSymbol(r rune) (*Symbol, error) {
 	for _, tk := range symbols {
 		if r == tk {
-			return &Symbol{Label: string(r)}, nil
+			return &Symbol{
+				Label: string(r),
+				val:   r,
+			}, nil
 		}
 	}
 	return nil, nil
