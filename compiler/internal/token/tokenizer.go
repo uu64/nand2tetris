@@ -12,11 +12,11 @@ type Tokenizer struct {
 	hasMoreTokens bool
 	tkType        TokenType
 
-	keyword Kwd
-	symbol  rune
-	id      string
-	intVal  int
-	strVal  string
+	keyword Keyword
+	symbol  Symbol
+	id      Identifier
+	intVal  IntConst
+	strVal  StringConst
 }
 
 func New(f io.Reader) *Tokenizer {
@@ -47,7 +47,7 @@ func (t *Tokenizer) TokenType() TokenType {
 	return t.tkType
 }
 
-func (t *Tokenizer) Keyword() (kwd Kwd, err error) {
+func (t *Tokenizer) Keyword() (kwd Keyword, err error) {
 	if t.tkType != TkKeyword {
 		err = fmt.Errorf("Keyword: token type is invalid: %d", t.tkType)
 		return
@@ -57,26 +57,16 @@ func (t *Tokenizer) Keyword() (kwd Kwd, err error) {
 	return
 }
 
-func (t *Tokenizer) Symbol() (symbol string, err error) {
+func (t *Tokenizer) Symbol() (symbol Symbol, err error) {
 	if t.tkType != TkSymbol {
 		err = fmt.Errorf("Symbol: token type is invalid: %d", t.tkType)
 		return
 	}
-
-	switch t.symbol {
-	case rune('<'):
-		symbol = "&lt;"
-	case rune('>'):
-		symbol = "&gt;"
-	case rune('&'):
-		symbol = "&amp;"
-	default:
-		symbol = string(t.symbol)
-	}
+	symbol = t.symbol
 	return
 }
 
-func (t *Tokenizer) Identifier() (id string, err error) {
+func (t *Tokenizer) Identifier() (id Identifier, err error) {
 	if t.tkType != TkIdentifier {
 		err = fmt.Errorf("Identifier: token type is invalid: %d", t.tkType)
 		return
@@ -86,7 +76,7 @@ func (t *Tokenizer) Identifier() (id string, err error) {
 	return
 }
 
-func (t *Tokenizer) IntVal() (v int, err error) {
+func (t *Tokenizer) IntVal() (v IntConst, err error) {
 	if t.tkType != TkIntConst {
 		err = fmt.Errorf("IntVal: token type is invalid: %d", t.tkType)
 		return
@@ -96,7 +86,7 @@ func (t *Tokenizer) IntVal() (v int, err error) {
 	return
 }
 
-func (t *Tokenizer) StringVal() (v string, err error) {
+func (t *Tokenizer) StringVal() (v StringConst, err error) {
 	if t.tkType != TkStringConst {
 		err = fmt.Errorf("StringVal: token type is invalid: %d", t.tkType)
 		return
@@ -158,43 +148,51 @@ func (t *Tokenizer) tokenize() (err error) {
 
 	r, _, err := t.reader.ReadRune()
 	if err != nil {
-		return err
+		return
 	}
 
 	// 空白の場合、後に連続する空白をすべて読んでreturn
 	if unicode.IsSpace(r) {
 		t.tkType = TkWhiteSpace
-		return t.consumeWhiteSpaces()
+		err = t.consumeWhiteSpaces()
+		return
 	}
 
 	// コメントの場合、コメントをすべて読んでreturn
 	if r == rune('/') {
-		next, _, err := t.reader.ReadRune()
-		if err != nil {
-			return err
+		next, _, e := t.reader.ReadRune()
+		if e != nil {
+			err = e
+			return
 		}
 
 		// '//'または'/*'で始まる場合はコメントと判定
 		if next == rune('/') {
 			t.tkType = TkComment
-			return t.consumeInlineComment()
+			err = t.consumeInlineComment()
+			return
 		}
 		if next == rune('*') {
 			t.tkType = TkComment
-			return t.consumeMultilineComment()
+			err = t.consumeMultilineComment()
+			return
 		}
 
 		// コメントではない場合, 先読みした分をUnread
-		if err := t.reader.UnreadRune(); err != nil {
-			return err
+		if err = t.reader.UnreadRune(); err != nil {
+			return
 		}
 	}
 
 	// symbolかチェック
-	if symbol := toSymbol(r); symbol != nil {
+	symbol, err := toSymbol(r)
+	if err != nil {
+		return
+	}
+	if symbol != nil {
 		t.tkType = TkSymbol
 		t.symbol = *symbol
-		return nil
+		return
 	}
 
 	// 一文字目が'"'の場合、文字列としてparse
@@ -202,9 +200,10 @@ func (t *Tokenizer) tokenize() (err error) {
 
 	runes := []rune{r}
 	for {
-		r, _, err := t.reader.ReadRune()
-		if err != nil {
-			return err
+		r, _, e := t.reader.ReadRune()
+		if e != nil {
+			err = e
+			return
 		}
 
 		// 文字列の場合'"', それ以外の場合シンボルまたは空白が見つかったらbreak
@@ -214,9 +213,14 @@ func (t *Tokenizer) tokenize() (err error) {
 				break
 			}
 		} else {
-			if symbol := toSymbol(r); symbol != nil || unicode.IsSpace(r) {
-				if err := t.reader.UnreadRune(); err != nil {
-					return err
+			symbol, e := toSymbol(r)
+			if e != nil {
+				err = e
+				return
+			}
+			if symbol != nil || unicode.IsSpace(r) {
+				if err = t.reader.UnreadRune(); err != nil {
+					return
 				}
 				break
 			}
@@ -230,26 +234,27 @@ func (t *Tokenizer) tokenize() (err error) {
 	if kwd := toKeyword(s); kwd != nil {
 		t.tkType = TkKeyword
 		t.keyword = *kwd
-		return nil
+		return
 	}
 
 	if i := toIntConst(s); i != nil {
 		t.tkType = TkIntConst
 		t.intVal = *i
-		return nil
+		return
 	}
 
 	if str := toStrConst(s); str != nil {
 		t.tkType = TkStringConst
 		t.strVal = *str
-		return nil
+		return
 	}
 
 	if id := toID(s); id != nil {
 		t.tkType = TkIdentifier
 		t.id = *id
-		return nil
+		return
 	}
 
-	return fmt.Errorf("unexpected statement: %s", s)
+	err = fmt.Errorf("unexpected statement: %s", s)
+	return
 }

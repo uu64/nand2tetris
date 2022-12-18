@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"log"
@@ -47,8 +48,10 @@ func (cmd *Cmd) parse() (*bytes.Buffer, error) {
 	defer f.Close()
 
 	t := token.New(f)
-	buf := bytes.NewBuffer([]byte{})
-	fmt.Fprintf(buf, "<tokens>\n")
+
+	tokens := &token.Tokens{
+		Tokens: []token.Token{},
+	}
 
 	for t.HasMoreTokens() {
 		if err := t.Advance(); err != nil {
@@ -56,45 +59,48 @@ func (cmd *Cmd) parse() (*bytes.Buffer, error) {
 		}
 
 		tkType := t.TokenType()
-		// TODO: xmlライブラリ使う
 		switch tkType {
 		case token.TkKeyword:
-			if v, err := t.Keyword(); err != nil {
+			v, err := t.Keyword()
+			if err != nil {
 				return nil, err
-			} else {
-				fmt.Fprintf(buf, "<keyword> %s </keyword>\n", v)
 			}
+			tokens.Tokens = append(tokens.Tokens, v)
 		case token.TkSymbol:
-			if v, err := t.Symbol(); err != nil {
+			v, err := t.Symbol()
+			if err != nil {
 				return nil, err
-			} else {
-				fmt.Fprintf(buf, "<symbol> %s </symbol>\n", v)
 			}
+			tokens.Tokens = append(tokens.Tokens, v)
 		case token.TkIdentifier:
-			if v, err := t.Identifier(); err != nil {
+			v, err := t.Identifier()
+			if err != nil {
 				return nil, err
-			} else {
-				fmt.Fprintf(buf, "<identifier> %s </identifier>\n", v)
 			}
+			tokens.Tokens = append(tokens.Tokens, v)
 		case token.TkIntConst:
-			if v, err := t.IntVal(); err != nil {
+			v, err := t.IntVal()
+			if err != nil {
 				return nil, err
-			} else {
-				fmt.Fprintf(buf, "<integerConstant> %d </integerConstant>\n", v)
 			}
+			tokens.Tokens = append(tokens.Tokens, v)
 		case token.TkStringConst:
-			if v, err := t.StringVal(); err != nil {
+			v, err := t.StringVal()
+			if err != nil {
 				return nil, err
-			} else {
-				fmt.Fprintf(buf, "<stringConstant> %s </stringConstant>\n", v)
 			}
+			tokens.Tokens = append(tokens.Tokens, v)
 		default:
 			continue
 		}
 	}
 
-	fmt.Fprintf(buf, "</tokens>\n")
-	return buf, nil
+	b, err := xml.MarshalIndent(tokens, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewBuffer(b), nil
 }
 
 func New(source, output string) *Cmd {

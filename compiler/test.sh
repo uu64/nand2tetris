@@ -4,7 +4,7 @@ check() {
     echo "../projects/10/${1}/${2}.jack"
     test -e "../projects/10/${1}/${2}T.xml" && rm "../projects/10/${1}/${2}T.xml"
     ./jackc "../projects/10/${1}/${2}.jack"
-    diff -u --strip-trailing-cr "./cmd/tokenizer/data/${1}/${2}T.xml" "../projects/10/${1}/${2}T.xml"
+    ../tools/TextComparer.sh "./cmd/tokenizer/data/${1}/${2}T.xml" "../projects/10/${1}/${2}T.xml"
 }
 
 test -e ./jackc && rm ./jackc
