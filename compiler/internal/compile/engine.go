@@ -8,15 +8,15 @@ import (
 
 type Compiler struct {
 	tokenizer *token.Tokenizer
+	class     *Class
 }
 
 func New(t *token.Tokenizer) *Compiler {
-	return &Compiler{t}
+	class := &Class{Tokens: []token.Token{}}
+	return &Compiler{t, class}
 }
 
 func (c *Compiler) CompileClass() (*Class, error) {
-	class := &Class{Tokens: []token.Token{}}
-
 	if !c.tokenizer.HasMoreTokens() {
 		return nil, fmt.Errorf("CompileClass: no tokens")
 	}
@@ -32,7 +32,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	if kwd.Val() != token.KwdClass {
 		return nil, fmt.Errorf("CompileClass: class should start with CLASS")
 	}
-	class.Tokens = append(class.Tokens, *kwd)
+	c.class.Tokens = append(c.class.Tokens, *kwd)
 
 	// className があるかチェック
 	if err := c.tokenizer.Advance(); err != nil {
@@ -42,7 +42,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	if err != nil {
 		return nil, err
 	}
-	class.Tokens = append(class.Tokens, *className)
+	c.class.Tokens = append(c.class.Tokens, *className)
 
 	// { があるかチェック
 	if err := c.tokenizer.Advance(); err != nil {
@@ -55,7 +55,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	if open.Val() != rune('{') {
 		return nil, fmt.Errorf("CompileClass: symbol '{' is missing")
 	}
-	class.Tokens = append(class.Tokens, *open)
+	c.class.Tokens = append(c.class.Tokens, *open)
 
 	// CompileClassVarDec()
 
@@ -72,7 +72,11 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	if close.Val() != rune('}') {
 		return nil, fmt.Errorf("CompileClass: symbol '}' is missing")
 	}
-	class.Tokens = append(class.Tokens, *close)
+	c.class.Tokens = append(c.class.Tokens, *close)
 
-	return class, nil
+	return c.class, nil
 }
+
+// func (c *Compiler) CompileClass() (*Class, error) {
+
+// }

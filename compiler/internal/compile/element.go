@@ -10,3 +10,8 @@ type Class struct {
 	XMLName xml.Name `xml:"class"`
 	Tokens  []token.Token
 }
+
+type ClassVarDec struct {
+	XMLName xml.Name `xml:"classVarDec"`
+	Tokens  []token.Token
+}
