@@ -8,16 +8,10 @@ import (
 )
 
 type Tokenizer struct {
-	TkType TokenType
+	Current Token
 
 	reader        *bufio.Reader
 	hasMoreTokens bool
-
-	keyword Keyword
-	symbol  Symbol
-	id      Identifier
-	intVal  IntConst
-	strVal  StringConst
 }
 
 func New(f io.Reader) *Tokenizer {
@@ -38,6 +32,7 @@ func (t *Tokenizer) Advance() error {
 	}
 
 	if err := t.tokenize(); err != nil {
+		fmt.Println(err)
 		return fmt.Errorf("Advance: tokenize failed: %w", err)
 	}
 
@@ -45,55 +40,56 @@ func (t *Tokenizer) Advance() error {
 }
 
 func (t *Tokenizer) TokenType() TokenType {
-	return t.TkType
+	return t.Current.TokenType()
 }
 
-func (t *Tokenizer) Keyword() (kwd *Keyword, err error) {
-	if t.TkType != TkKeyword {
-		err = fmt.Errorf("Keyword: token type is invalid: %d", t.TkType)
+func (t *Tokenizer) Keyword() (ptr *Keyword, err error) {
+	if tkType := t.Current.TokenType(); tkType != TkKeyword {
+		err = fmt.Errorf("Keyword: token type is invalid: %d", tkType)
 		return
 	}
-
-	kwd = &t.keyword
+	kwd := t.Current.(Keyword)
+	ptr = &kwd
 	return
 }
 
-func (t *Tokenizer) Symbol() (symbol *Symbol, err error) {
-	if t.TkType != TkSymbol {
-		err = fmt.Errorf("Symbol: token type is invalid: %d", t.TkType)
+func (t *Tokenizer) Symbol() (ptr *Symbol, err error) {
+	if tkType := t.Current.TokenType(); tkType != TkSymbol {
+		err = fmt.Errorf("Symbol: token type is invalid: %d", tkType)
 		return
 	}
-	symbol = &t.symbol
+	symbol := t.Current.(Symbol)
+	ptr = &symbol
 	return
 }
 
-func (t *Tokenizer) Identifier() (id *Identifier, err error) {
-	if t.TkType != TkIdentifier {
-		err = fmt.Errorf("Identifier: token type is invalid: %d", t.TkType)
+func (t *Tokenizer) Identifier() (ptr *Identifier, err error) {
+	if tkType := t.Current.TokenType(); tkType != TkIdentifier {
+		err = fmt.Errorf("Identifier: token type is invalid: %d", tkType)
 		return
 	}
-
-	id = &t.id
+	id := t.Current.(Identifier)
+	ptr = &id
 	return
 }
 
-func (t *Tokenizer) IntVal() (v *IntConst, err error) {
-	if t.TkType != TkIntConst {
-		err = fmt.Errorf("IntVal: token type is invalid: %d", t.TkType)
+func (t *Tokenizer) IntVal() (ptr *IntConst, err error) {
+	if tkType := t.Current.TokenType(); tkType != TkIntConst {
+		err = fmt.Errorf("IntVal: token type is invalid: %d", tkType)
 		return
 	}
-
-	v = &t.intVal
+	v := t.Current.(IntConst)
+	ptr = &v
 	return
 }
 
-func (t *Tokenizer) StringVal() (v *StringConst, err error) {
-	if t.TkType != TkStringConst {
-		err = fmt.Errorf("StringVal: token type is invalid: %d", t.TkType)
+func (t *Tokenizer) StringVal() (ptr *StringConst, err error) {
+	if tkType := t.Current.TokenType(); tkType != TkStringConst {
+		err = fmt.Errorf("StringVal: token type is invalid: %d", tkType)
 		return
 	}
-
-	v = &t.strVal
+	v := t.Current.(StringConst)
+	ptr = &v
 	return
 }
 
@@ -142,19 +138,22 @@ func (t *Tokenizer) consumeMultilineComment() error {
 func (t *Tokenizer) tokenize() (err error) {
 	defer func() {
 		if err == io.EOF {
+			t.Current = EOF{}
 			t.hasMoreTokens = false
 			err = nil
+		} else if err != nil {
+			t.Current = Err{}
 		}
 	}()
 
-	r, _, err := t.reader.ReadRune()
-	if err != nil {
+	r, _, e := t.reader.ReadRune()
+	if e != nil {
+		err = e
 		return
 	}
 
 	// 空白の場合、後に連続する空白をすべて読んでrerun
 	if unicode.IsSpace(r) {
-		t.TkType = TkWhiteSpace
 		err = t.consumeWhiteSpaces()
 		err = t.tokenize()
 		return
@@ -170,13 +169,11 @@ func (t *Tokenizer) tokenize() (err error) {
 
 		// '//'または'/*'で始まる場合はコメントと判定
 		if next == rune('/') {
-			t.TkType = TkComment
 			err = t.consumeInlineComment()
 			err = t.tokenize()
 			return
 		}
 		if next == rune('*') {
-			t.TkType = TkComment
 			err = t.consumeMultilineComment()
 			err = t.tokenize()
 			return
@@ -194,8 +191,7 @@ func (t *Tokenizer) tokenize() (err error) {
 		return
 	}
 	if symbol != nil {
-		t.TkType = TkSymbol
-		t.symbol = *symbol
+		t.Current = *symbol
 		return
 	}
 
@@ -236,26 +232,22 @@ func (t *Tokenizer) tokenize() (err error) {
 	s := string(runes)
 
 	if kwd := toKeyword(s); kwd != nil {
-		t.TkType = TkKeyword
-		t.keyword = *kwd
+		t.Current = *kwd
 		return
 	}
 
 	if i := toIntConst(s); i != nil {
-		t.TkType = TkIntConst
-		t.intVal = *i
+		t.Current = *i
 		return
 	}
 
 	if str := toStrConst(s); str != nil {
-		t.TkType = TkStringConst
-		t.strVal = *str
+		t.Current = *str
 		return
 	}
 
 	if id := toID(s); id != nil {
-		t.TkType = TkIdentifier
-		t.id = *id
+		t.Current = *id
 		return
 	}
 

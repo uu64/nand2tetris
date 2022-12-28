@@ -10,12 +10,24 @@ const (
 	TkIdentifier
 	TkIntConst
 	TkStringConst
-	TkWhiteSpace
-	TkComment
+	TkEOF
+	TkErr
 )
 
 type Token interface {
 	TokenType() TokenType
+}
+
+type EOF struct{}
+
+func (eof EOF) TokenType() TokenType {
+	return TkEOF
+}
+
+type Err struct{}
+
+func (err Err) TokenType() TokenType {
+	return TkErr
 }
 
 type Tokens struct {
