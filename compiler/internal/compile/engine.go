@@ -146,7 +146,9 @@ func (c *Compiler) compileType() ([]token.Element, error) {
 	if err := c.tokenizer.Advance(); err != nil {
 		return nil, fmt.Errorf("compileType: %w", err)
 	}
-	switch c.tokenizer.TkType {
+
+	tkType := c.tokenizer.Current.TokenType()
+	switch tkType {
 	case token.TkKeyword:
 		kwd, err := c.tokenizer.Keyword()
 		if err != nil {
@@ -163,7 +165,7 @@ func (c *Compiler) compileType() ([]token.Element, error) {
 		}
 		tokens = append(tokens, *id)
 	default:
-		return nil, fmt.Errorf("compileType: type should start with keyword or identifier, got %d", c.tokenizer.TkType)
+		return nil, fmt.Errorf("compileType: type should start with keyword or identifier, got %d", tkType)
 	}
 
 	return tokens, nil
