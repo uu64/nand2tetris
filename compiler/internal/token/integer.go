@@ -17,6 +17,10 @@ func (tk IntConst) TokenType() TokenType {
 	return TkIntConst
 }
 
+func (tk IntConst) ElementType() ElementType {
+	return ElToken
+}
+
 func (tk IntConst) Val() (int, error) {
 	v, err := strconv.Atoi(tk.Label)
 	if err != nil {

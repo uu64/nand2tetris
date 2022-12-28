@@ -17,6 +17,10 @@ func (tk Identifier) TokenType() TokenType {
 	return TkIdentifier
 }
 
+func (tk Identifier) ElementType() ElementType {
+	return ElToken
+}
+
 func (tk Identifier) Val() string {
 	return tk.Label
 }

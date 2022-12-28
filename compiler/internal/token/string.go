@@ -16,6 +16,10 @@ func (tk StringConst) TokenType() TokenType {
 	return TkStringConst
 }
 
+func (tk StringConst) ElementType() ElementType {
+	return ElToken
+}
+
 func (tk StringConst) Val() string {
 	return tk.Label
 }

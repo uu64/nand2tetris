@@ -34,6 +34,10 @@ func (tk Symbol) TokenType() TokenType {
 	return TkSymbol
 }
 
+func (tk Symbol) ElementType() ElementType {
+	return ElToken
+}
+
 func (tk Symbol) Val() rune {
 	return tk.val
 }

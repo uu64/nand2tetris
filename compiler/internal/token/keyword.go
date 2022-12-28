@@ -61,6 +61,10 @@ func (tk Keyword) TokenType() TokenType {
 	return TkKeyword
 }
 
+func (tk Keyword) ElementType() ElementType {
+	return ElToken
+}
+
 func (tk Keyword) Val() KeywordType {
 	return KwdLabelMap[tk.Label]
 }

@@ -12,7 +12,7 @@ type Compiler struct {
 }
 
 func New(t *token.Tokenizer) *Compiler {
-	class := &Class{Tokens: []token.Token{}}
+	class := &Class{Tokens: []token.Element{}}
 	return &Compiler{t, class}
 }
 
