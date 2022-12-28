@@ -8,9 +8,10 @@ import (
 )
 
 type Tokenizer struct {
+	TkType TokenType
+
 	reader        *bufio.Reader
 	hasMoreTokens bool
-	tkType        TokenType
 
 	keyword Keyword
 	symbol  Symbol
@@ -44,12 +45,12 @@ func (t *Tokenizer) Advance() error {
 }
 
 func (t *Tokenizer) TokenType() TokenType {
-	return t.tkType
+	return t.TkType
 }
 
 func (t *Tokenizer) Keyword() (kwd *Keyword, err error) {
-	if t.tkType != TkKeyword {
-		err = fmt.Errorf("Keyword: token type is invalid: %d", t.tkType)
+	if t.TkType != TkKeyword {
+		err = fmt.Errorf("Keyword: token type is invalid: %d", t.TkType)
 		return
 	}
 
@@ -58,8 +59,8 @@ func (t *Tokenizer) Keyword() (kwd *Keyword, err error) {
 }
 
 func (t *Tokenizer) Symbol() (symbol *Symbol, err error) {
-	if t.tkType != TkSymbol {
-		err = fmt.Errorf("Symbol: token type is invalid: %d", t.tkType)
+	if t.TkType != TkSymbol {
+		err = fmt.Errorf("Symbol: token type is invalid: %d", t.TkType)
 		return
 	}
 	symbol = &t.symbol
@@ -67,8 +68,8 @@ func (t *Tokenizer) Symbol() (symbol *Symbol, err error) {
 }
 
 func (t *Tokenizer) Identifier() (id *Identifier, err error) {
-	if t.tkType != TkIdentifier {
-		err = fmt.Errorf("Identifier: token type is invalid: %d", t.tkType)
+	if t.TkType != TkIdentifier {
+		err = fmt.Errorf("Identifier: token type is invalid: %d", t.TkType)
 		return
 	}
 
@@ -77,8 +78,8 @@ func (t *Tokenizer) Identifier() (id *Identifier, err error) {
 }
 
 func (t *Tokenizer) IntVal() (v *IntConst, err error) {
-	if t.tkType != TkIntConst {
-		err = fmt.Errorf("IntVal: token type is invalid: %d", t.tkType)
+	if t.TkType != TkIntConst {
+		err = fmt.Errorf("IntVal: token type is invalid: %d", t.TkType)
 		return
 	}
 
@@ -87,8 +88,8 @@ func (t *Tokenizer) IntVal() (v *IntConst, err error) {
 }
 
 func (t *Tokenizer) StringVal() (v *StringConst, err error) {
-	if t.tkType != TkStringConst {
-		err = fmt.Errorf("StringVal: token type is invalid: %d", t.tkType)
+	if t.TkType != TkStringConst {
+		err = fmt.Errorf("StringVal: token type is invalid: %d", t.TkType)
 		return
 	}
 
@@ -153,7 +154,7 @@ func (t *Tokenizer) tokenize() (err error) {
 
 	// 空白の場合、後に連続する空白をすべて読んでrerun
 	if unicode.IsSpace(r) {
-		t.tkType = TkWhiteSpace
+		t.TkType = TkWhiteSpace
 		err = t.consumeWhiteSpaces()
 		err = t.tokenize()
 		return
@@ -169,13 +170,13 @@ func (t *Tokenizer) tokenize() (err error) {
 
 		// '//'または'/*'で始まる場合はコメントと判定
 		if next == rune('/') {
-			t.tkType = TkComment
+			t.TkType = TkComment
 			err = t.consumeInlineComment()
 			err = t.tokenize()
 			return
 		}
 		if next == rune('*') {
-			t.tkType = TkComment
+			t.TkType = TkComment
 			err = t.consumeMultilineComment()
 			err = t.tokenize()
 			return
@@ -193,7 +194,7 @@ func (t *Tokenizer) tokenize() (err error) {
 		return
 	}
 	if symbol != nil {
-		t.tkType = TkSymbol
+		t.TkType = TkSymbol
 		t.symbol = *symbol
 		return
 	}
@@ -235,25 +236,25 @@ func (t *Tokenizer) tokenize() (err error) {
 	s := string(runes)
 
 	if kwd := toKeyword(s); kwd != nil {
-		t.tkType = TkKeyword
+		t.TkType = TkKeyword
 		t.keyword = *kwd
 		return
 	}
 
 	if i := toIntConst(s); i != nil {
-		t.tkType = TkIntConst
+		t.TkType = TkIntConst
 		t.intVal = *i
 		return
 	}
 
 	if str := toStrConst(s); str != nil {
-		t.tkType = TkStringConst
+		t.TkType = TkStringConst
 		t.strVal = *str
 		return
 	}
 
 	if id := toID(s); id != nil {
-		t.tkType = TkIdentifier
+		t.TkType = TkIdentifier
 		t.id = *id
 		return
 	}

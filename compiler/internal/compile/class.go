@@ -11,7 +11,15 @@ type Class struct {
 	Tokens  []token.Element
 }
 
+func (el Class) ElementType() token.ElementType {
+	return token.ElClass
+}
+
 type ClassVarDec struct {
 	XMLName xml.Name `xml:"classVarDec"`
 	Tokens  []token.Element
+}
+
+func (el ClassVarDec) ElementType() token.ElementType {
+	return token.ElClassVarDec
 }
