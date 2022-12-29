@@ -48,7 +48,11 @@ func (cmd *Cmd) compile() (*bytes.Buffer, error) {
 	}
 	defer f.Close()
 
-	compiler := compile.New(token.New(f))
+	compiler, err := compile.New(token.New(f))
+	if err != nil {
+		return nil, err
+	}
+
 	class, err := compiler.CompileClass()
 	if err != nil {
 		return nil, err
