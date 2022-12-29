@@ -32,7 +32,6 @@ func (t *Tokenizer) Advance() error {
 	}
 
 	if err := t.tokenize(); err != nil {
-		fmt.Println(err)
 		return fmt.Errorf("Advance: tokenize failed: %w", err)
 	}
 
@@ -45,7 +44,7 @@ func (t *Tokenizer) TokenType() TokenType {
 
 func (t *Tokenizer) Keyword() (ptr *Keyword, err error) {
 	if tkType := t.Current.TokenType(); tkType != TkKeyword {
-		err = fmt.Errorf("Keyword: token type is invalid: %d", tkType)
+		err = fmt.Errorf("Keyword: token type is invalid: %v", tkType)
 		return
 	}
 	kwd := t.Current.(Keyword)
@@ -55,7 +54,7 @@ func (t *Tokenizer) Keyword() (ptr *Keyword, err error) {
 
 func (t *Tokenizer) Symbol() (ptr *Symbol, err error) {
 	if tkType := t.Current.TokenType(); tkType != TkSymbol {
-		err = fmt.Errorf("Symbol: token type is invalid: %d", tkType)
+		err = fmt.Errorf("Symbol: token type is invalid: %v", tkType)
 		return
 	}
 	symbol := t.Current.(Symbol)
@@ -65,7 +64,7 @@ func (t *Tokenizer) Symbol() (ptr *Symbol, err error) {
 
 func (t *Tokenizer) Identifier() (ptr *Identifier, err error) {
 	if tkType := t.Current.TokenType(); tkType != TkIdentifier {
-		err = fmt.Errorf("Identifier: token type is invalid: %d", tkType)
+		err = fmt.Errorf("Identifier: token type is invalid: %v", tkType)
 		return
 	}
 	id := t.Current.(Identifier)
@@ -75,7 +74,7 @@ func (t *Tokenizer) Identifier() (ptr *Identifier, err error) {
 
 func (t *Tokenizer) IntVal() (ptr *IntConst, err error) {
 	if tkType := t.Current.TokenType(); tkType != TkIntConst {
-		err = fmt.Errorf("IntVal: token type is invalid: %d", tkType)
+		err = fmt.Errorf("IntVal: token type is invalid: %v", tkType)
 		return
 	}
 	v := t.Current.(IntConst)
@@ -85,7 +84,7 @@ func (t *Tokenizer) IntVal() (ptr *IntConst, err error) {
 
 func (t *Tokenizer) StringVal() (ptr *StringConst, err error) {
 	if tkType := t.Current.TokenType(); tkType != TkStringConst {
-		err = fmt.Errorf("StringVal: token type is invalid: %d", tkType)
+		err = fmt.Errorf("StringVal: token type is invalid: %v", tkType)
 		return
 	}
 	v := t.Current.(StringConst)

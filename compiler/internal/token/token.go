@@ -14,6 +14,26 @@ const (
 	TkErr
 )
 
+func (tkType TokenType) String() string {
+	switch tkType {
+	case TkKeyword:
+		return "keyword"
+	case TkSymbol:
+		return "symbol"
+	case TkIdentifier:
+		return "identifier"
+	case TkIntConst:
+		return "integerConstant"
+	case TkStringConst:
+		return "stringConstant"
+	case TkEOF:
+		return "EOF"
+	case TkErr:
+		return "Err"
+	}
+	panic("unknown token type")
+}
+
 type Token interface {
 	TokenType() TokenType
 }
