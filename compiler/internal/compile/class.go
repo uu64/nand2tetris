@@ -52,6 +52,15 @@ func (el SubroutineBody) ElementType() token.ElementType {
 	return token.ElSubroutineBody
 }
 
+type VarDec struct {
+	XMLName xml.Name `xml:"varDec"`
+	Tokens  []token.Element
+}
+
+func (el VarDec) ElementType() token.ElementType {
+	return token.ElVarDec
+}
+
 func (c *Compiler) CompileClass() (*Class, error) {
 	class := &Class{Tokens: []token.Element{}}
 
@@ -95,6 +104,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	for c.tokenizer.TokenType() == token.TkKeyword {
 		// TkKeywordであると確定しているためerrorは起こり得ない
 		kwd, _ := c.tokenizer.Keyword()
+
 		switch kwd.Val() {
 		case token.KwdStatic, token.KwdField:
 			classVarDec, err := c.CompileClassVarDec()
@@ -183,29 +193,6 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 		}
 	}
 	return classVarDec, nil
-}
-
-func (c *Compiler) compileType() ([]token.Element, error) {
-	tokens := []token.Element{}
-
-	tkType := c.tokenizer.Current.TokenType()
-	switch tkType {
-	case token.TkKeyword:
-		// TkKeywordであると確定しているためerrorは起こり得ない
-		kwd, _ := c.tokenizer.Keyword()
-		if kwd.Val() != token.KwdInt && kwd.Val() != token.KwdChar && kwd.Val() != token.KwdBoolean {
-			return nil, fmt.Errorf("compileType: invalid type %s", kwd.Label)
-		}
-		tokens = append(tokens, *kwd)
-	case token.TkIdentifier:
-		// TkIdentifierであると確定しているためerrorは起こり得ない
-		id, _ := c.tokenizer.Identifier()
-		tokens = append(tokens, *id)
-	default:
-		return nil, fmt.Errorf("compileType: type should start with keyword or identifier, got %d", tkType)
-	}
-
-	return tokens, nil
 }
 
 func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
@@ -350,7 +337,31 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 		return nil, err
 	}
 
-	// TODO
+	for c.tokenizer.TokenType() == token.TkKeyword {
+		// TkKeywordであると確定しているためerrorは起こり得ない
+		kwd, _ := c.tokenizer.Keyword()
+
+		switch kwd.Val() {
+		case token.KwdVar:
+			classVarDec, err := c.CompileClassVarDec()
+			if err != nil {
+				return nil, fmt.Errorf("CompileClass: %w", err)
+			}
+			subroutineBody.Tokens = append(subroutineBody.Tokens, classVarDec)
+		case token.KwdLet, token.KwdIf, token.KwdWhile, token.KwdDo, token.KwdReturn:
+			subroutineDec, err := c.CompileStatements()
+			if err != nil {
+				return nil, fmt.Errorf("CompileClass: %w", err)
+			}
+			subroutineBody.Tokens = append(subroutineBody.Tokens, subroutineDec)
+		default:
+			return nil, fmt.Errorf("CompileClass: invalid token %v", kwd)
+		}
+
+		if err := c.tokenizer.Advance(); err != nil {
+			return nil, err
+		}
+	}
 
 	// } があるかチェック
 	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('}') {
@@ -360,6 +371,87 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	}
 
 	return subroutineBody, nil
+}
+
+func (c *Compiler) CompileVarDec() (*VarDec, error) {
+	varDec := &VarDec{Tokens: []token.Element{}}
+
+	// var で始まるかチェック
+	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdVar {
+		return nil, fmt.Errorf("CompileVarDec: varDec should start with VAR, got %v", c.tokenizer.Current)
+	} else {
+		varDec.Tokens = append(varDec.Tokens, *kwd)
+	}
+
+	if err := c.tokenizer.Advance(); err != nil {
+		return nil, err
+	}
+
+	// type
+	types, err := c.compileType()
+	if err != nil {
+		return nil, fmt.Errorf("CompileVarDec: %w", err)
+	}
+	varDec.Tokens = append(varDec.Tokens, types...)
+
+	if err := c.tokenizer.Advance(); err != nil {
+		return nil, err
+	}
+
+	for {
+		// varName
+		varName, err := c.compileVarName()
+		if err != nil {
+			return nil, fmt.Errorf("CompileVarDec: %w", err)
+		}
+		varDec.Tokens = append(varDec.Tokens, varName)
+
+		if err := c.tokenizer.Advance(); err != nil {
+			return nil, err
+		}
+
+		// check additional varName
+		s, err := c.tokenizer.Symbol()
+		if err != nil {
+			return nil, fmt.Errorf("CompileVarDec: expected \",\" or \";\", got %v", s)
+		}
+
+		if s.Val() == rune(',') {
+			varDec.Tokens = append(varDec.Tokens, *s)
+			if err := c.tokenizer.Advance(); err != nil {
+				return nil, err
+			}
+		} else if s.Val() == rune(';') {
+			varDec.Tokens = append(varDec.Tokens, *s)
+			break
+		} else {
+			return nil, fmt.Errorf("CompileVarDec: expected \",\" or \";\", got %v", s)
+		}
+	}
+	return varDec, nil
+}
+
+func (c *Compiler) compileType() ([]token.Element, error) {
+	tokens := []token.Element{}
+
+	tkType := c.tokenizer.Current.TokenType()
+	switch tkType {
+	case token.TkKeyword:
+		// TkKeywordであると確定しているためerrorは起こり得ない
+		kwd, _ := c.tokenizer.Keyword()
+		if kwd.Val() != token.KwdInt && kwd.Val() != token.KwdChar && kwd.Val() != token.KwdBoolean {
+			return nil, fmt.Errorf("compileType: invalid type %s", kwd.Label)
+		}
+		tokens = append(tokens, *kwd)
+	case token.TkIdentifier:
+		// TkIdentifierであると確定しているためerrorは起こり得ない
+		id, _ := c.tokenizer.Identifier()
+		tokens = append(tokens, *id)
+	default:
+		return nil, fmt.Errorf("compileType: type should start with keyword or identifier, got %d", tkType)
+	}
+
+	return tokens, nil
 }
 
 func (c *Compiler) compileClassName() (*token.Identifier, error) {
