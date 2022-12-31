@@ -11,6 +11,7 @@ check_compiler() {
     echo "../projects/10/${1}/${2}.jack"
     test -e "../projects/10/${1}/${2}.xml" && rm "../projects/10/${1}/${2}.xml"
     ./JackCompiler "../projects/10/${1}/${2}.jack"
+    # replace: <tag>{new line}{indent}</tag> -> <tag></tag>
     diff -uw  <(gsed -z -E "s#<([a-zA-Z]+)>\r?\n\s+</([a-zA-Z]+)>#<\1></\2>#g" "./cmd/compiler/data/${1}/${2}.xml") "../projects/10/${1}/${2}.xml"
 }
 

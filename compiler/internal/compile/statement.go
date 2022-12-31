@@ -102,10 +102,6 @@ func (c *Compiler) CompileStatements() (*Statements, error) {
 		default:
 			return nil, fmt.Errorf("CompileStatements: invalid keyword %s", kwd)
 		}
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
 	}
 
 	return &statements, nil
@@ -196,6 +192,11 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	} else {
 		statement.Tokens = append(statement.Tokens, *end)
 	}
+
+	if err := c.tokenizer.Advance(); err != nil {
+		return nil, err
+	}
+
 	return &statement, nil
 }
 
@@ -296,6 +297,10 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 		if err := consumeStatements(); err != nil {
 			return nil, err
 		}
+
+		if err := c.tokenizer.Advance(); err != nil {
+			return nil, err
+		}
 	}
 
 	return &statement, nil
@@ -375,6 +380,10 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 		statement.Tokens = append(statement.Tokens, *close)
 	}
 
+	if err := c.tokenizer.Advance(); err != nil {
+		return nil, err
+	}
+
 	return &statement, nil
 }
 
@@ -409,6 +418,11 @@ func (c *Compiler) compileDoStatement() (*DoStatement, error) {
 	} else {
 		statement.Tokens = append(statement.Tokens, *end)
 	}
+
+	if err := c.tokenizer.Advance(); err != nil {
+		return nil, err
+	}
+
 	return &statement, nil
 }
 
@@ -445,5 +459,10 @@ func (c *Compiler) compileReturnStatement() (*ReturnStatement, error) {
 	} else {
 		statement.Tokens = append(statement.Tokens, *end)
 	}
+
+	if err := c.tokenizer.Advance(); err != nil {
+		return nil, err
+	}
+
 	return &statement, nil
 }
