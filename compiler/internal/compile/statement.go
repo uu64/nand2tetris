@@ -111,15 +111,11 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	statement := LetStatement{Tokens: []token.Element{}}
 
 	// 'let'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdLet {
+	kwd, err := c.consumeKeyword(token.KwdLet)
+	if err != nil {
 		return nil, fmt.Errorf("compileLetStatement: letStatement should start with LET, got %v", c.tokenizer.Current)
-	} else {
-		statement.Tokens = append(statement.Tokens, *kwd)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	statement.Tokens = append(statement.Tokens, *kwd)
 
 	// varName
 	varName, err := c.compileName()
@@ -128,18 +124,10 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, varName)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// ('[' expression ']')?
-	if open, err := c.tokenizer.Symbol(); err == nil && open.Val() == rune('[') {
+	if open, err := c.consumeSymbol(rune('[')); err == nil {
 		// '['
 		statement.Tokens = append(statement.Tokens, *open)
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
 
 		// expression
 		exp, err := c.CompileExpression()
@@ -148,32 +136,20 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 		}
 		statement.Tokens = append(statement.Tokens, exp)
 
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
-
 		// ']'
-		if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune(']') {
+		close, err := c.consumeSymbol(rune(']'))
+		if err != nil {
 			return nil, fmt.Errorf("compileLetStatement: symbol ']' is missing, got %v", c.tokenizer.Current)
-		} else {
-			statement.Tokens = append(statement.Tokens, *close)
 		}
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
+		statement.Tokens = append(statement.Tokens, *close)
 	}
 
 	// '='
-	if eq, err := c.tokenizer.Symbol(); err != nil || eq.Val() != rune('=') {
+	eq, err := c.consumeSymbol(rune('='))
+	if err != nil {
 		return nil, fmt.Errorf("compileLetStatement: symbol '=' is missing, got %v", c.tokenizer.Current)
-	} else {
-		statement.Tokens = append(statement.Tokens, *eq)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	statement.Tokens = append(statement.Tokens, *eq)
 
 	// expression
 	exp, err := c.CompileExpression()
@@ -182,20 +158,12 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, exp)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// ';'
-	if end, err := c.tokenizer.Symbol(); err != nil || end.Val() != rune(';') {
+	end, err := c.consumeSymbol(rune(';'))
+	if err != nil {
 		return nil, fmt.Errorf("compileLetStatement: symbol ';' is missing, got %v", c.tokenizer.Current)
-	} else {
-		statement.Tokens = append(statement.Tokens, *end)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	statement.Tokens = append(statement.Tokens, *end)
 
 	return &statement, nil
 }
@@ -204,26 +172,18 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 	statement := IfStatement{Tokens: []token.Element{}}
 
 	// 'if'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdIf {
+	kwd, err := c.consumeKeyword(token.KwdIf)
+	if err != nil {
 		return nil, fmt.Errorf("compileIfStatement: ifStatement should start with IF, got %v", c.tokenizer.Current)
-	} else {
-		statement.Tokens = append(statement.Tokens, *kwd)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	statement.Tokens = append(statement.Tokens, *kwd)
 
 	// '('
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('(') {
+	open, err := c.consumeSymbol(rune('('))
+	if err != nil {
 		return nil, fmt.Errorf("compileIfStatement: symbol '(' is missing, got %v", c.tokenizer.Current)
-	} else {
-		statement.Tokens = append(statement.Tokens, *close)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	statement.Tokens = append(statement.Tokens, *open)
 
 	// expression
 	exp, err := c.CompileExpression()
@@ -232,49 +192,35 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, exp)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// ')'
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune(')') {
+	close, err := c.consumeSymbol(rune(')'))
+	if err != nil {
 		return nil, fmt.Errorf("compileIfStatement: symbol ')' is missing, got %v", c.tokenizer.Current)
-	} else {
-		statement.Tokens = append(statement.Tokens, *close)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	statement.Tokens = append(statement.Tokens, *close)
 
 	consumeStatements := func() error {
 		// '{'
-		if open, err := c.tokenizer.Symbol(); err != nil || open.Val() != rune('{') {
+		open, err := c.consumeSymbol(rune('{'))
+		if err != nil {
 			return fmt.Errorf("compileIfStatement: symbol '{' is missing, got %v", c.tokenizer.Current)
-		} else {
-			statement.Tokens = append(statement.Tokens, *open)
 		}
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return err
-		}
+		statement.Tokens = append(statement.Tokens, *open)
 
 		// statements
+		// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
 		statements, err := c.CompileStatements()
 		if err != nil {
 			return fmt.Errorf("compileIfStatement: %w", err)
 		}
 		statement.Tokens = append(statement.Tokens, statements)
 
-		// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
-
 		// '}'
-		if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('}') {
+		close, err := c.consumeSymbol(rune('}'))
+		if err != nil {
 			return fmt.Errorf("compileIfStatement: symbol '}' is missing, got %v", c.tokenizer.Current)
-		} else {
-			statement.Tokens = append(statement.Tokens, *close)
 		}
-
+		statement.Tokens = append(statement.Tokens, *close)
 		return nil
 	}
 
@@ -282,23 +228,11 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 		return nil, err
 	}
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// 'else'
-	if kwd, err := c.tokenizer.Keyword(); err == nil && kwd.Val() == token.KwdElse {
+	if kwd, err := c.consumeKeyword(token.KwdElse); err == nil {
 		statement.Tokens = append(statement.Tokens, *kwd)
 
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
-
 		if err := consumeStatements(); err != nil {
-			return nil, err
-		}
-
-		if err := c.tokenizer.Advance(); err != nil {
 			return nil, err
 		}
 	}
@@ -310,25 +244,17 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 	statement := WhileStatement{Tokens: []token.Element{}}
 
 	// 'while'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdWhile {
+	kwd, err := c.consumeKeyword(token.KwdWhile)
+	if err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: whileStatement should start with WHILE, got %v", c.tokenizer.Current)
-	} else {
-		statement.Tokens = append(statement.Tokens, *kwd)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	statement.Tokens = append(statement.Tokens, *kwd)
 
 	// '('
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('(') {
+	if open, err := c.consumeSymbol(rune('(')); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol '(' is missing, got %v", c.tokenizer.Current)
 	} else {
-		statement.Tokens = append(statement.Tokens, *close)
-	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
+		statement.Tokens = append(statement.Tokens, *open)
 	}
 
 	// expression
@@ -338,50 +264,33 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, exp)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// ')'
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune(')') {
+	if close, err := c.consumeSymbol(rune(')')); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol ')' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *close)
 	}
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// '{'
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('{') {
+	if open, err := c.consumeSymbol(rune('{')); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol '{' is missing, got %v", c.tokenizer.Current)
 	} else {
-		statement.Tokens = append(statement.Tokens, *close)
-	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
+		statement.Tokens = append(statement.Tokens, *open)
 	}
 
 	// statements
+	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
 	statements, err := c.CompileStatements()
 	if err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: %w", err)
 	}
 	statement.Tokens = append(statement.Tokens, statements)
 
-	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
-
 	// '}'
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('}') {
+	if close, err := c.consumeSymbol(rune('}')); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol '}' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *close)
-	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
 	}
 
 	return &statement, nil
@@ -391,14 +300,10 @@ func (c *Compiler) compileDoStatement() (*DoStatement, error) {
 	statement := DoStatement{Tokens: []token.Element{}}
 
 	// 'do'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdDo {
+	if kwd, err := c.consumeKeyword(token.KwdDo); err != nil {
 		return nil, fmt.Errorf("compileDoStatement: doStatement should start with DO, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *kwd)
-	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
 	}
 
 	// subroutineCall
@@ -408,19 +313,11 @@ func (c *Compiler) compileDoStatement() (*DoStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, call...)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// ';'
-	if end, err := c.tokenizer.Symbol(); err != nil || end.Val() != rune(';') {
+	if end, err := c.consumeSymbol(rune(';')); err != nil {
 		return nil, fmt.Errorf("compileDoStatement: symbol ';' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *end)
-	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
 	}
 
 	return &statement, nil
@@ -430,14 +327,10 @@ func (c *Compiler) compileReturnStatement() (*ReturnStatement, error) {
 	statement := ReturnStatement{Tokens: []token.Element{}}
 
 	// 'return'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdReturn {
+	if kwd, err := c.consumeKeyword(token.KwdReturn); err != nil {
 		return nil, fmt.Errorf("compileReturnStatement: ReturnStatement should start with RETURN, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *kwd)
-	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
 	}
 
 	// expression?
@@ -447,21 +340,13 @@ func (c *Compiler) compileReturnStatement() (*ReturnStatement, error) {
 			return nil, fmt.Errorf("compileReturnStatement: %w", err)
 		}
 		statement.Tokens = append(statement.Tokens, exp)
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
 	}
 
 	// ';'
-	if end, err := c.tokenizer.Symbol(); err != nil || end.Val() != rune(';') {
+	if end, err := c.consumeSymbol(rune(';')); err != nil {
 		return nil, fmt.Errorf("compileReturnStatement: symbol ';' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *end)
-	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
 	}
 
 	return &statement, nil

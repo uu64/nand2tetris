@@ -129,25 +129,17 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	tokens := []token.Element{}
 
 	// varName
-	name, err := c.tokenizer.Identifier()
+	name, err := c.consumeIdentifier()
 	if err != nil {
 		return nil, fmt.Errorf("compileArrayDec: %w", err)
 	}
 	tokens = append(tokens, name)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// '['
-	if open, err := c.tokenizer.Symbol(); err != nil || open.Val() != rune('[') {
+	if open, err := c.consumeSymbol(rune('[')); err != nil {
 		return nil, fmt.Errorf("CompileArrayDec: symbol '[' is missing, got %v", c.tokenizer.Current)
 	} else {
 		tokens = append(tokens, *open)
-	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
 	}
 
 	// expression
@@ -157,12 +149,8 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	}
 	tokens = append(tokens, expression)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// ']'
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune(']') {
+	if close, err := c.consumeSymbol(rune(']')); err != nil {
 		return nil, fmt.Errorf("CompileArrayDec: symbol ']' is missing, got %v", c.tokenizer.Current)
 	} else {
 		tokens = append(tokens, *close)
@@ -175,39 +163,30 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 	tokens := []token.Element{}
 
 	// subroutineName or (className | varName)
-	name, err := c.tokenizer.Identifier()
+	name, err := c.consumeIdentifier()
 	if err != nil {
 		return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 	}
 	tokens = append(tokens, name)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	consumeExpressionList := func() error {
 		// '('
-		if open, err := c.tokenizer.Symbol(); err != nil || open.Val() != rune('(') {
+		if open, err := c.consumeSymbol(rune('(')); err != nil {
 			return fmt.Errorf("CompileSubroutineCall: symbol '(' is missing, got %v", c.tokenizer.Current)
 		} else {
 			tokens = append(tokens, *open)
 		}
 
-		if err := c.tokenizer.Advance(); err != nil {
-			return err
-		}
-
 		// expressionList
+		// NOTE: You don't need to call Advance() because Advance() is already called inside CompileExpressionList()
 		list, err := c.CompileExpressionList()
 		if err != nil {
 			return fmt.Errorf("compileSubroutineCall: %w", err)
 		}
 		tokens = append(tokens, list)
 
-		// NOTE: You don't need to call Advance() because Advance() is already called inside CompileExpressionList()
-
 		// ')'
-		if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune(')') {
+		if close, err := c.consumeSymbol(rune(')')); err != nil {
 			return fmt.Errorf("CompileSubroutineCall: symbol ')' is missing, got %v", c.tokenizer.Current)
 		} else {
 			tokens = append(tokens, *close)
@@ -235,15 +214,11 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		}
 
 		// subroutineName
-		id, err := c.tokenizer.Identifier()
+		id, err := c.consumeIdentifier()
 		if err != nil {
 			return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 		}
 		tokens = append(tokens, id)
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
 
 		// '(' expressionList ')'
 		if err := consumeExpressionList(); err != nil {
@@ -273,19 +248,11 @@ func (c *Compiler) CompileExpressionList() (*ExpressionList, error) {
 		}
 		expressionList.Tokens = append(expressionList.Tokens, expression)
 
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
-
 		// check additional parameter
-		if s, err := c.tokenizer.Symbol(); err != nil || s.Val() != rune(',') {
+		if s, err := c.consumeSymbol(rune(',')); err != nil {
 			break
 		} else {
 			expressionList.Tokens = append(expressionList.Tokens, s)
-		}
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
 		}
 	}
 

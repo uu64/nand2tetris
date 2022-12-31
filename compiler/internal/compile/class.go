@@ -69,15 +69,11 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	}
 
 	// 'class'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdClass {
+	kwd, err := c.consumeKeyword(token.KwdClass)
+	if err != nil {
 		return nil, fmt.Errorf("CompileClass: class should start with CLASS, got %v", c.tokenizer.Current)
-	} else {
-		class.Tokens = append(class.Tokens, *kwd)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, fmt.Errorf("CompileClass: %w", err)
-	}
+	class.Tokens = append(class.Tokens, *kwd)
 
 	// className
 	className, err := c.compileName()
@@ -86,20 +82,12 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	}
 	class.Tokens = append(class.Tokens, className)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, fmt.Errorf("CompileClass: %w", err)
-	}
-
 	// '{'
-	if open, err := c.tokenizer.Symbol(); err != nil || open.Val() != rune('{') {
+	open, err := c.consumeSymbol(rune('{'))
+	if err != nil {
 		return nil, fmt.Errorf("CompileClass: symbol '{' is missing, got %v", c.tokenizer.Current)
-	} else {
-		class.Tokens = append(class.Tokens, *open)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	class.Tokens = append(class.Tokens, *open)
 
 	// classVarDec* subroutineDec*
 	for c.tokenizer.TokenType() == token.TkKeyword {
@@ -124,18 +112,14 @@ func (c *Compiler) CompileClass() (*Class, error) {
 		default:
 			return nil, fmt.Errorf("CompileClass: invalid token %v", kwd)
 		}
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
 	}
 
 	// '}'
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('}') {
+	close, err := c.consumeSymbol(rune('}'))
+	if err != nil {
 		return nil, fmt.Errorf("CompileClass: symbol '}' is missing, got %v", c.tokenizer.Current)
-	} else {
-		class.Tokens = append(class.Tokens, *close)
 	}
+	class.Tokens = append(class.Tokens, *close)
 
 	return class, nil
 }
@@ -144,15 +128,11 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 	classVarDec := &ClassVarDec{Tokens: []token.Element{}}
 
 	// ('static' | 'field')
-	if kwd, err := c.tokenizer.Keyword(); err != nil || (kwd.Val() != token.KwdStatic && kwd.Val() != token.KwdField) {
+	kwd, err := c.consumeKeyword(token.KwdStatic, token.KwdField)
+	if err != nil {
 		return nil, fmt.Errorf("CompileClassVarDec: classVarDec should start with STATIC or FIELD, got %v", c.tokenizer.Current)
-	} else {
-		classVarDec.Tokens = append(classVarDec.Tokens, *kwd)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	classVarDec.Tokens = append(classVarDec.Tokens, *kwd)
 
 	// type
 	types, err := c.compileType()
@@ -174,26 +154,17 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 		}
 		classVarDec.Tokens = append(classVarDec.Tokens, varName)
 
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
-
 		// check additional varName
-		s, err := c.tokenizer.Symbol()
+		s, err := c.consumeSymbol(rune(','), rune(';'))
 		if err != nil {
-			return nil, fmt.Errorf("CompileClassVarDec: expected \",\" or \";\", got %v", s)
+			return nil, fmt.Errorf("CompileVarDec: expected \",\" or \";\", got %v", s)
 		}
 
 		if s.Val() == rune(',') {
 			classVarDec.Tokens = append(classVarDec.Tokens, *s)
-			if err := c.tokenizer.Advance(); err != nil {
-				return nil, err
-			}
 		} else if s.Val() == rune(';') {
 			classVarDec.Tokens = append(classVarDec.Tokens, *s)
 			break
-		} else {
-			return nil, fmt.Errorf("CompileClassVarDec: expected \",\" or \";\", got %v", s)
 		}
 	}
 	return classVarDec, nil
@@ -203,19 +174,14 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	subroutineDec := &SubroutineDec{Tokens: []token.Element{}}
 
 	// ('constructor' | 'function' | 'method')
-	if kwd, err := c.tokenizer.Keyword(); err != nil || (kwd.Val() != token.KwdConstructor && kwd.Val() != token.KwdFunction && kwd.Val() != token.KwdMethod) {
+	if kwd, err := c.consumeKeyword(token.KwdConstructor, token.KwdFunction, token.KwdMethod); err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: classVarDec should start with CONSTRUCTOR or FUNCTION or METHOD, got %v", c.tokenizer.Current)
 	} else {
 		subroutineDec.Tokens = append(subroutineDec.Tokens, *kwd)
 	}
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// ('void' | type)
-	kwd, err := c.tokenizer.Keyword()
-	if err == nil && kwd.Val() == token.KwdVoid {
+	if kwd, err := c.tokenizer.Keyword(); err == nil && kwd.Val() == token.KwdVoid {
 		subroutineDec.Tokens = append(subroutineDec.Tokens, *kwd)
 	} else {
 		types, err := c.compileType()
@@ -224,7 +190,6 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 		}
 		subroutineDec.Tokens = append(subroutineDec.Tokens, types...)
 	}
-
 	if err := c.tokenizer.Advance(); err != nil {
 		return nil, err
 	}
@@ -236,40 +201,27 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineName)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// '('
-	if open, err := c.tokenizer.Symbol(); err != nil || open.Val() != rune('(') {
+	open, err := c.consumeSymbol(rune('('))
+	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: symbol '(' is missing, got %v", c.tokenizer.Current)
-	} else {
-		subroutineDec.Tokens = append(subroutineDec.Tokens, *open)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	subroutineDec.Tokens = append(subroutineDec.Tokens, *open)
 
 	// parameterList
+	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileParameterList()
 	paramList, err := c.CompileParameterList()
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: %w", err)
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, paramList)
 
-	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileParameterList()
-
 	// ')'
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune(')') {
+	close, err := c.consumeSymbol(rune(')'))
+	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: symbol ')' is missing, got %v", c.tokenizer.Current)
-	} else {
-		subroutineDec.Tokens = append(subroutineDec.Tokens, *close)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	subroutineDec.Tokens = append(subroutineDec.Tokens, *close)
 
 	// subroutineBody
 	subroutineBody, err := c.CompileSubroutineBody()
@@ -305,17 +257,15 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 			}
 			parameterList.Tokens = append(parameterList.Tokens, varName)
 
-			if err := c.tokenizer.Advance(); err != nil {
+			// check additional parameter
+			s, err := c.tokenizer.Symbol()
+			if err != nil {
 				return err
 			}
-
-			// check additional parameter
-			if s, err := c.tokenizer.Symbol(); err != nil || s.Val() != rune(',') {
+			if s.Val() != rune(',') {
 				break
-			} else {
-				parameterList.Tokens = append(parameterList.Tokens, s)
 			}
-
+			parameterList.Tokens = append(parameterList.Tokens, s)
 			if err := c.tokenizer.Advance(); err != nil {
 				return err
 			}
@@ -324,10 +274,14 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 	}
 
 	// Return empty ParameterList when current token is not type
-	if kwd, err := c.tokenizer.Keyword(); err == nil && (kwd.Val() == token.KwdInt || kwd.Val() == token.KwdChar || kwd.Val() == token.KwdBoolean) {
-		err := consumeParameters()
-		if err != nil {
-			return nil, err
+	if c.tokenizer.TokenType() == token.TkKeyword {
+		// ignore the error because it is already checked that the token type is KEYWORD
+		kwd, _ := c.tokenizer.Keyword()
+		if v := kwd.Val(); v == token.KwdInt || v == token.KwdChar || v == token.KwdBoolean {
+			err := consumeParameters()
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	if c.tokenizer.TokenType() == token.TkIdentifier {
@@ -344,48 +298,38 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	subroutineBody := &SubroutineBody{Tokens: []token.Element{}}
 
 	// '{'
-	if open, err := c.tokenizer.Symbol(); err != nil || open.Val() != rune('{') {
+	open, err := c.consumeSymbol(rune('{'))
+	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineBody: symbol '{' is missing, got %v", c.tokenizer.Current)
-	} else {
-		subroutineBody.Tokens = append(subroutineBody.Tokens, *open)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	subroutineBody.Tokens = append(subroutineBody.Tokens, *open)
 
 	// varDec*
 	for {
 		if kwd, err := c.tokenizer.Keyword(); !(err == nil && kwd.Val() == token.KwdVar) {
 			break
 		}
-
 		varDec, err := c.CompileVarDec()
 		if err != nil {
 			return nil, fmt.Errorf("CompileSubroutineBody: %w", err)
 		}
 		subroutineBody.Tokens = append(subroutineBody.Tokens, varDec)
-
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
 	}
 
 	// statements
+	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
 	statements, err := c.CompileStatements()
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineBody: %w", err)
 	}
 	subroutineBody.Tokens = append(subroutineBody.Tokens, statements)
 
-	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
-
 	// '}'
-	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('}') {
+	close, err := c.consumeSymbol(rune('}'))
+	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineBody: symbol '}' is missing, got %v", c.tokenizer.Current)
-	} else {
-		subroutineBody.Tokens = append(subroutineBody.Tokens, *close)
 	}
+	subroutineBody.Tokens = append(subroutineBody.Tokens, *close)
 
 	return subroutineBody, nil
 }
@@ -394,15 +338,11 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 	varDec := &VarDec{Tokens: []token.Element{}}
 
 	// 'var'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdVar {
+	kwd, err := c.consumeKeyword(token.KwdVar)
+	if err != nil {
 		return nil, fmt.Errorf("CompileVarDec: varDec should start with VAR, got %v", c.tokenizer.Current)
-	} else {
-		varDec.Tokens = append(varDec.Tokens, *kwd)
 	}
-
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	varDec.Tokens = append(varDec.Tokens, *kwd)
 
 	// type
 	types, err := c.compileType()
@@ -424,26 +364,17 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 		}
 		varDec.Tokens = append(varDec.Tokens, varName)
 
-		if err := c.tokenizer.Advance(); err != nil {
-			return nil, err
-		}
-
 		// check additional varName
-		s, err := c.tokenizer.Symbol()
+		s, err := c.consumeSymbol(rune(','), rune(';'))
 		if err != nil {
 			return nil, fmt.Errorf("CompileVarDec: expected \",\" or \";\", got %v", s)
 		}
 
 		if s.Val() == rune(',') {
 			varDec.Tokens = append(varDec.Tokens, *s)
-			if err := c.tokenizer.Advance(); err != nil {
-				return nil, err
-			}
 		} else if s.Val() == rune(';') {
 			varDec.Tokens = append(varDec.Tokens, *s)
 			break
-		} else {
-			return nil, fmt.Errorf("CompileVarDec: expected \",\" or \";\", got %v", s)
 		}
 	}
 	return varDec, nil
@@ -477,5 +408,10 @@ func (c *Compiler) compileName() (*token.Identifier, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compileName: %w", err)
 	}
+
+	if err := c.tokenizer.Advance(); err != nil {
+		return nil, err
+	}
+
 	return id, nil
 }
