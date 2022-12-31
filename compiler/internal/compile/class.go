@@ -80,7 +80,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	}
 
 	// className
-	className, err := c.compileClassName()
+	className, err := c.compileName()
 	if err != nil {
 		return nil, fmt.Errorf("CompileClass: %w", err)
 	}
@@ -168,7 +168,7 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 	// varName (',' varName)* ';'
 	for {
 		// varName
-		varName, err := c.compileVarName()
+		varName, err := c.compileName()
 		if err != nil {
 			return nil, fmt.Errorf("CompileClassVarDec: %w", err)
 		}
@@ -230,7 +230,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 
 	// subroutineName
-	subroutineName, err := c.compileSubroutineName()
+	subroutineName, err := c.compileName()
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: %w", err)
 	}
@@ -274,7 +274,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	// subroutineBody
 	subroutineBody, err := c.CompileSubroutineBody()
 	if err != nil {
-		return nil, fmt.Errorf("CompileSubroutineBody: %w", err)
+		return nil, fmt.Errorf("CompileSubroutineDec: %w", err)
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineBody)
 
@@ -299,7 +299,7 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 			}
 
 			// varName
-			varName, err := c.compileVarName()
+			varName, err := c.compileName()
 			if err != nil {
 				return fmt.Errorf("CompileParameterList: %w", err)
 			}
@@ -362,7 +362,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 
 		varDec, err := c.CompileVarDec()
 		if err != nil {
-			return nil, fmt.Errorf("CompileClass: %w", err)
+			return nil, fmt.Errorf("CompileSubroutineBody: %w", err)
 		}
 		subroutineBody.Tokens = append(subroutineBody.Tokens, varDec)
 
@@ -374,9 +374,11 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	// statements
 	statements, err := c.CompileStatements()
 	if err != nil {
-		return nil, fmt.Errorf("CompileClass: %w", err)
+		return nil, fmt.Errorf("CompileSubroutineBody: %w", err)
 	}
 	subroutineBody.Tokens = append(subroutineBody.Tokens, statements)
+
+	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
 
 	// '}'
 	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('}') {
@@ -416,7 +418,7 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 	// varName (',' varName)*
 	for {
 		// varName
-		varName, err := c.compileVarName()
+		varName, err := c.compileName()
 		if err != nil {
 			return nil, fmt.Errorf("CompileVarDec: %w", err)
 		}
@@ -470,22 +472,10 @@ func (c *Compiler) compileType() ([]token.Element, error) {
 	return tokens, nil
 }
 
-func (c *Compiler) compileClassName() (*token.Identifier, error) {
-	return c.compileName()
-}
-
-func (c *Compiler) compileSubroutineName() (*token.Identifier, error) {
-	return c.compileName()
-}
-
-func (c *Compiler) compileVarName() (*token.Identifier, error) {
-	return c.compileName()
-}
-
 func (c *Compiler) compileName() (*token.Identifier, error) {
 	id, err := c.tokenizer.Identifier()
 	if err != nil {
-		return nil, fmt.Errorf("compileVarName: %w", err)
+		return nil, fmt.Errorf("compileName: %w", err)
 	}
 	return id, nil
 }

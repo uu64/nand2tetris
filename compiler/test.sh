@@ -1,17 +1,17 @@
-#!/bin/sh -eu
+#!/bin/bash -eu
 
 check_tokenizer() {
     echo "../projects/10/${1}/${2}.jack"
     test -e "../projects/10/${1}/${2}T.xml" && rm "../projects/10/${1}/${2}T.xml"
     ./JackTokenizer "../projects/10/${1}/${2}.jack"
-    ../tools/TextComparer.sh "./cmd/tokenizer/data/${1}/${2}T.xml" "../projects/10/${1}/${2}T.xml"
+    diff -uw "./cmd/tokenizer/data/${1}/${2}T.xml" "../projects/10/${1}/${2}T.xml"
 }
 
 check_compiler() {
     echo "../projects/10/${1}/${2}.jack"
     test -e "../projects/10/${1}/${2}.xml" && rm "../projects/10/${1}/${2}.xml"
     ./JackCompiler "../projects/10/${1}/${2}.jack"
-    ../tools/TextComparer.sh "./cmd/tokenizer/data/${1}/${2}.xml" "../projects/10/${1}/${2}.xml"
+    diff -uw  <(gsed -z -E "s#<([a-zA-Z]+)>\r?\n\s+</([a-zA-Z]+)>#<\1></\2>#g" "./cmd/compiler/data/${1}/${2}.xml") "../projects/10/${1}/${2}.xml"
 }
 
 cat<<EOF

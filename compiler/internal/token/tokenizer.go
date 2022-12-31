@@ -92,6 +92,16 @@ func (t *Tokenizer) StringVal() (ptr *StringConst, err error) {
 	return
 }
 
+func (t *Tokenizer) CheckNextRune() (rune, error) {
+	var next rune
+	next, _, err := t.reader.ReadRune()
+	if err != nil {
+		return next, fmt.Errorf("CheckNextRune: %w", err)
+	}
+
+	return next, t.reader.UnreadRune()
+}
+
 func (t *Tokenizer) consumeWhiteSpaces() error {
 	for {
 		next, _, err := t.reader.ReadRune()

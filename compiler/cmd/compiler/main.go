@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/xml"
 	"flag"
 	"fmt"
@@ -41,7 +40,11 @@ func (cmd *Cmd) write(b []byte) error {
 	return nil
 }
 
-func (cmd *Cmd) compile() (*bytes.Buffer, error) {
+func (cmd *Cmd) encodeXML(class *compile.Class) ([]byte, error) {
+	return xml.MarshalIndent(class, "", "  ")
+}
+
+func (cmd *Cmd) compile() (*compile.Class, error) {
 	f, err := os.Open(cmd.source)
 	if err != nil {
 		return nil, err
@@ -53,17 +56,7 @@ func (cmd *Cmd) compile() (*bytes.Buffer, error) {
 		return nil, err
 	}
 
-	class, err := compiler.CompileClass()
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := xml.MarshalIndent(class, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes.NewBuffer(b), nil
+	return compiler.CompileClass()
 }
 
 func New(source, output string) *Cmd {
@@ -71,12 +64,17 @@ func New(source, output string) *Cmd {
 }
 
 func (cmd *Cmd) Run() (err error) {
-	buf, err := cmd.compile()
+	class, err := cmd.compile()
 	if err != nil {
 		return err
 	}
 
-	err = cmd.write(buf.Bytes())
+	b, err := cmd.encodeXML(class)
+	if err != nil {
+		return err
+	}
+
+	err = cmd.write(b)
 	if err != nil {
 		return err
 	}

@@ -69,6 +69,10 @@ func (tk Keyword) Val() KeywordType {
 	return KwdLabelMap[tk.Label]
 }
 
+func (tk Keyword) String() string {
+	return tk.Label
+}
+
 func toKeyword(s string) *Keyword {
 	if _, ok := KwdLabelMap[s]; ok {
 		return &Keyword{Label: s}

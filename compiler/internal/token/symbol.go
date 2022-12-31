@@ -42,6 +42,10 @@ func (tk Symbol) Val() rune {
 	return tk.val
 }
 
+func (tk Symbol) String() string {
+	return string(tk.val)
+}
+
 func toSymbol(r rune) (*Symbol, error) {
 	for _, tk := range symbols {
 		if r == tk {

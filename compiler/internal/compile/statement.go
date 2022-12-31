@@ -100,7 +100,7 @@ func (c *Compiler) CompileStatements() (*Statements, error) {
 			}
 			statements.Tokens = append(statements.Tokens, statement)
 		default:
-			return nil, fmt.Errorf("CompileStatements: invalid token %v", kwd)
+			return nil, fmt.Errorf("CompileStatements: invalid keyword %s", kwd)
 		}
 
 		if err := c.tokenizer.Advance(); err != nil {
@@ -115,7 +115,7 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	statement := LetStatement{Tokens: []token.Element{}}
 
 	// 'let'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdVar {
+	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdLet {
 		return nil, fmt.Errorf("compileLetStatement: letStatement should start with LET, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *kwd)
@@ -126,7 +126,7 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	}
 
 	// varName
-	varName, err := c.compileVarName()
+	varName, err := c.compileName()
 	if err != nil {
 		return nil, fmt.Errorf("compileLetStatement: %w", err)
 	}
@@ -248,10 +248,10 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 
 	consumeStatements := func() error {
 		// '{'
-		if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('{') {
+		if open, err := c.tokenizer.Symbol(); err != nil || open.Val() != rune('{') {
 			return fmt.Errorf("compileIfStatement: symbol '{' is missing, got %v", c.tokenizer.Current)
 		} else {
-			statement.Tokens = append(statement.Tokens, *close)
+			statement.Tokens = append(statement.Tokens, *open)
 		}
 
 		if err := c.tokenizer.Advance(); err != nil {
@@ -265,9 +265,7 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 		}
 		statement.Tokens = append(statement.Tokens, statements)
 
-		if err := c.tokenizer.Advance(); err != nil {
-			return err
-		}
+		// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
 
 		// '}'
 		if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('}') {
@@ -368,9 +366,7 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, statements)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
+	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
 
 	// '}'
 	if close, err := c.tokenizer.Symbol(); err != nil || close.Val() != rune('}') {
@@ -420,7 +416,7 @@ func (c *Compiler) compileReturnStatement() (*ReturnStatement, error) {
 	statement := ReturnStatement{Tokens: []token.Element{}}
 
 	// 'return'
-	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdDo {
+	if kwd, err := c.tokenizer.Keyword(); err != nil || kwd.Val() != token.KwdReturn {
 		return nil, fmt.Errorf("compileReturnStatement: ReturnStatement should start with RETURN, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *kwd)
