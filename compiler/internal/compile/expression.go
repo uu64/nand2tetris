@@ -37,11 +37,28 @@ func (el Term) ElementType() token.ElementType {
 func (c *Compiler) CompileExpression() (*Expression, error) {
 	expression := Expression{Tokens: []token.Element{}}
 
-	term, err := c.CompileTerm()
-	if err != nil {
-		return nil, fmt.Errorf("compileExpression: %w", err)
+	// term (op term)*
+	for {
+		term, err := c.CompileTerm()
+		if err != nil {
+			return nil, fmt.Errorf("compileExpression: %w", err)
+		}
+		expression.Tokens = append(expression.Tokens, term)
+
+		// check that the current token is op
+		op, err := c.tokenizer.Symbol()
+		if err != nil {
+			break
+		}
+		v := op.Val()
+		if !(v == rune('+') || v == rune('-') || v == rune('*') || v == rune('/') || v == rune('&') || v == rune('|') || v == rune('<') || v == rune('>') || v == rune('=')) {
+			break
+		}
+		expression.Tokens = append(expression.Tokens, op)
+		if err := c.tokenizer.Advance(); err != nil {
+			return nil, fmt.Errorf("compileExpression: %w", err)
+		}
 	}
-	expression.Tokens = append(expression.Tokens, term)
 
 	return &expression, nil
 }
@@ -58,12 +75,14 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		v, _ := c.tokenizer.IntVal()
 		term.Tokens = append(term.Tokens, v)
 		return &term, c.tokenizer.Advance()
+
 	// stringConstant
 	case token.TkStringConst:
 		// ignore the error because it is already checked that the token type is STRING_CONST
 		v, _ := c.tokenizer.StringVal()
 		term.Tokens = append(term.Tokens, v)
 		return &term, c.tokenizer.Advance()
+
 	// keywordConstant
 	case token.TkKeyword:
 		kwd, err := c.consumeKeyword(token.KwdTrue, token.KwdFalse, token.KwdNull, token.KwdThis)
@@ -71,6 +90,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 			return nil, fmt.Errorf("CompileTerm: invalid keyword %s", kwd)
 		}
 		term.Tokens = append(term.Tokens, kwd)
+
 	// varName | varName '[' expression ']' | subroutineCall
 	// subroutineCall: subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
 	case token.TkIdentifier:
@@ -87,6 +107,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 				return nil, fmt.Errorf("compileTerm: %w", err)
 			}
 			term.Tokens = append(term.Tokens, tokens...)
+
 		// subroutineCall
 		case rune('('), rune('.'):
 			tokens, err := c.CompileSubroutineCall()
@@ -94,6 +115,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 				return nil, fmt.Errorf("compileTerm: %w", err)
 			}
 			term.Tokens = append(term.Tokens, tokens...)
+
 		// varName
 		default:
 			name, err := c.compileName()
@@ -111,13 +133,40 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		switch s.Val() {
 		// '(' expression ')'
 		case rune('('):
-			return nil, fmt.Errorf("CompileTerm: '(' expression ')' not implemented")
+			term.Tokens = append(term.Tokens, s)
+			if err := c.tokenizer.Advance(); err != nil {
+				return nil, fmt.Errorf("compileTerm: %w", err)
+			}
+
+			expression, err := c.CompileExpression()
+			if err != nil {
+				return nil, fmt.Errorf("compileTerm: %w", err)
+			}
+			term.Tokens = append(term.Tokens, expression)
+
+			close, err := c.consumeSymbol(rune(')'))
+			if err != nil {
+				return nil, fmt.Errorf("compileTerm: %w", err)
+			}
+			term.Tokens = append(term.Tokens, close)
+
 		// unaryOp term
 		case rune('-'), rune('~'):
-			return nil, fmt.Errorf("CompileTerm: unaryOp term not implemented")
+			term.Tokens = append(term.Tokens, s)
+			if err := c.tokenizer.Advance(); err != nil {
+				return nil, fmt.Errorf("compileTerm: %w", err)
+			}
+
+			t, err := c.CompileTerm()
+			if err != nil {
+				return nil, fmt.Errorf("compileTerm: %w", err)
+			}
+			term.Tokens = append(term.Tokens, t)
+
 		default:
 			return nil, fmt.Errorf("CompileTerm: invalid symbol %s", s)
 		}
+
 	default:
 		return nil, fmt.Errorf("CompileTerm: invalid token %v", c.tokenizer.Current)
 	}
@@ -257,18 +306,4 @@ func (c *Compiler) CompileExpressionList() (*ExpressionList, error) {
 	}
 
 	return expressionList, nil
-}
-
-func (c *Compiler) compileOp() (*token.Symbol, error) {
-	s, err := c.tokenizer.Symbol()
-	if err != nil {
-		return nil, fmt.Errorf("compileOp: %w", err)
-	}
-
-	switch s.Val() {
-	case rune('+'), rune('-'), rune('*'), rune('/'), rune('&'), rune('|'), rune('<'), rune('>'), rune('='):
-		return s, nil
-	default:
-		return nil, fmt.Errorf("compileOp: invalid symbol %s", s)
-	}
 }
