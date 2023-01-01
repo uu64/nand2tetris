@@ -21,10 +21,6 @@ func New(t *token.Tokenizer) (*Compiler, error) {
 func (c *Compiler) consumeKeyword(expected ...token.KeywordType) (*token.Keyword, error) {
 	kwd, err := c.tokenizer.Keyword()
 	if err != nil {
-		err := fmt.Errorf("consumeSymbol: %w", err)
-		if e := c.tokenizer.Advance(); e != nil {
-			err = fmt.Errorf("%w, and %w", err, e)
-		}
 		return nil, fmt.Errorf("consumeKeyword: %w", err)
 	}
 
@@ -44,10 +40,6 @@ func (c *Compiler) consumeKeyword(expected ...token.KeywordType) (*token.Keyword
 func (c *Compiler) consumeSymbol(expected ...rune) (*token.Symbol, error) {
 	symbol, err := c.tokenizer.Symbol()
 	if err != nil {
-		err := fmt.Errorf("consumeSymbol: %w", err)
-		if e := c.tokenizer.Advance(); e != nil {
-			err = fmt.Errorf("%w, and %w", err, e)
-		}
 		return nil, fmt.Errorf("consumeSymbol: %w", err)
 	}
 
@@ -67,12 +59,8 @@ func (c *Compiler) consumeSymbol(expected ...rune) (*token.Symbol, error) {
 func (c *Compiler) consumeIdentifier() (*token.Identifier, error) {
 	id, err := c.tokenizer.Identifier()
 	if err != nil {
-		err := fmt.Errorf("consumeIdentifier: %w", err)
-		if e := c.tokenizer.Advance(); e != nil {
-			err = fmt.Errorf("%w, and %w", err, e)
-		}
 		return nil, fmt.Errorf("consumeIdentifier: %w", err)
 	}
 
-	return id, nil
+	return id, c.tokenizer.Advance()
 }

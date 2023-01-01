@@ -57,20 +57,20 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		// ignore the error because it is already checked that the token type is INT_CONST
 		v, _ := c.tokenizer.IntVal()
 		term.Tokens = append(term.Tokens, v)
+		return &term, c.tokenizer.Advance()
 	// stringConstant
 	case token.TkStringConst:
 		// ignore the error because it is already checked that the token type is STRING_CONST
 		v, _ := c.tokenizer.StringVal()
 		term.Tokens = append(term.Tokens, v)
+		return &term, c.tokenizer.Advance()
 	// keywordConstant
 	case token.TkKeyword:
-		// ignore the error because it is already checked that the token type is KEYWORD
-		kwd, _ := c.tokenizer.Keyword()
-		if v := kwd.Val(); v == token.KwdTrue || v == token.KwdFalse || v == token.KwdNull || v == token.KwdThis {
-			term.Tokens = append(term.Tokens, kwd)
-		} else {
+		kwd, err := c.consumeKeyword(token.KwdTrue, token.KwdFalse, token.KwdNull, token.KwdThis)
+		if err != nil {
 			return nil, fmt.Errorf("CompileTerm: invalid keyword %s", kwd)
 		}
+		term.Tokens = append(term.Tokens, kwd)
 	// varName | varName '[' expression ']' | subroutineCall
 	// subroutineCall: subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
 	case token.TkIdentifier:
