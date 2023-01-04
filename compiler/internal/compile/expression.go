@@ -51,7 +51,15 @@ func (c *Compiler) CompileExpression() (*Expression, error) {
 			break
 		}
 		v := op.Val()
-		if !(v == rune('+') || v == rune('-') || v == rune('*') || v == rune('/') || v == rune('&') || v == rune('|') || v == rune('<') || v == rune('>') || v == rune('=')) {
+		if !(v == token.SymPlus ||
+			v == token.SymMinus ||
+			v == token.SymAsterisk ||
+			v == token.SymSlash ||
+			v == token.SymAmpersand ||
+			v == token.SymBar ||
+			v == token.SymLessThan ||
+			v == token.SymGreaterThan ||
+			v == token.SymEqual) {
 			break
 		}
 		expression.Tokens = append(expression.Tokens, op)
@@ -101,7 +109,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 
 		switch next {
 		// varName '[' expression ']'
-		case rune('['):
+		case token.SymLeftSquareBracket:
 			tokens, err := c.CompileArrayDec()
 			if err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
@@ -109,7 +117,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 			term.Tokens = append(term.Tokens, tokens...)
 
 		// subroutineCall
-		case rune('('), rune('.'):
+		case token.SymLeftParenthesis, token.SymDot:
 			tokens, err := c.CompileSubroutineCall()
 			if err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
@@ -132,7 +140,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 
 		switch s.Val() {
 		// '(' expression ')'
-		case rune('('):
+		case token.SymLeftParenthesis:
 			term.Tokens = append(term.Tokens, s)
 			if err := c.tokenizer.Advance(); err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
@@ -144,14 +152,14 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 			}
 			term.Tokens = append(term.Tokens, expression)
 
-			close, err := c.consumeSymbol(rune(')'))
+			close, err := c.consumeSymbol(token.SymRightParenthesis)
 			if err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
 			}
 			term.Tokens = append(term.Tokens, close)
 
 		// unaryOp term
-		case rune('-'), rune('~'):
+		case token.SymMinus, token.SymTilde:
 			term.Tokens = append(term.Tokens, s)
 			if err := c.tokenizer.Advance(); err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
@@ -185,7 +193,7 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	tokens = append(tokens, name)
 
 	// '['
-	if open, err := c.consumeSymbol(rune('[')); err != nil {
+	if open, err := c.consumeSymbol(token.SymLeftSquareBracket); err != nil {
 		return nil, fmt.Errorf("CompileArrayDec: symbol '[' is missing, got %v", c.tokenizer.Current)
 	} else {
 		tokens = append(tokens, *open)
@@ -199,7 +207,7 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	tokens = append(tokens, expression)
 
 	// ']'
-	if close, err := c.consumeSymbol(rune(']')); err != nil {
+	if close, err := c.consumeSymbol(token.SymRightSquareBracket); err != nil {
 		return nil, fmt.Errorf("CompileArrayDec: symbol ']' is missing, got %v", c.tokenizer.Current)
 	} else {
 		tokens = append(tokens, *close)
@@ -220,7 +228,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 
 	consumeExpressionList := func() error {
 		// '('
-		if open, err := c.consumeSymbol(rune('(')); err != nil {
+		if open, err := c.consumeSymbol(token.SymLeftParenthesis); err != nil {
 			return fmt.Errorf("CompileSubroutineCall: symbol '(' is missing, got %v", c.tokenizer.Current)
 		} else {
 			tokens = append(tokens, *open)
@@ -235,7 +243,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		tokens = append(tokens, list)
 
 		// ')'
-		if close, err := c.consumeSymbol(rune(')')); err != nil {
+		if close, err := c.consumeSymbol(token.SymRightParenthesis); err != nil {
 			return fmt.Errorf("CompileSubroutineCall: symbol ')' is missing, got %v", c.tokenizer.Current)
 		} else {
 			tokens = append(tokens, *close)
@@ -250,12 +258,12 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 	}
 	switch s.Val() {
-	case rune('('):
+	case token.SymLeftParenthesis:
 		// '(' expressionList ')'
 		if err := consumeExpressionList(); err != nil {
 			return nil, err
 		}
-	case rune('.'):
+	case token.SymDot:
 		tokens = append(tokens, s)
 
 		if err := c.tokenizer.Advance(); err != nil {
@@ -284,7 +292,7 @@ func (c *Compiler) CompileExpressionList() (*ExpressionList, error) {
 	expressionList := &ExpressionList{Tokens: []token.Element{}}
 
 	// Return empty ParameterList when current token is ')'
-	if s, err := c.tokenizer.Symbol(); err == nil && s.Val() == rune(')') {
+	if s, err := c.tokenizer.Symbol(); err == nil && s.Val() == token.SymRightParenthesis {
 		return expressionList, nil
 	}
 
@@ -298,7 +306,7 @@ func (c *Compiler) CompileExpressionList() (*ExpressionList, error) {
 		expressionList.Tokens = append(expressionList.Tokens, expression)
 
 		// check additional parameter
-		if s, err := c.consumeSymbol(rune(',')); err != nil {
+		if s, err := c.consumeSymbol(token.SymComma); err != nil {
 			break
 		} else {
 			expressionList.Tokens = append(expressionList.Tokens, s)

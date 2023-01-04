@@ -125,7 +125,7 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	statement.Tokens = append(statement.Tokens, varName)
 
 	// ('[' expression ']')?
-	if open, err := c.consumeSymbol(rune('[')); err == nil {
+	if open, err := c.consumeSymbol(token.SymLeftSquareBracket); err == nil {
 		// '['
 		statement.Tokens = append(statement.Tokens, *open)
 
@@ -137,7 +137,7 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 		statement.Tokens = append(statement.Tokens, exp)
 
 		// ']'
-		close, err := c.consumeSymbol(rune(']'))
+		close, err := c.consumeSymbol(token.SymRightSquareBracket)
 		if err != nil {
 			return nil, fmt.Errorf("compileLetStatement: symbol ']' is missing, got %v", c.tokenizer.Current)
 		}
@@ -145,7 +145,7 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	}
 
 	// '='
-	eq, err := c.consumeSymbol(rune('='))
+	eq, err := c.consumeSymbol(token.SymEqual)
 	if err != nil {
 		return nil, fmt.Errorf("compileLetStatement: symbol '=' is missing, got %v", c.tokenizer.Current)
 	}
@@ -159,7 +159,7 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	statement.Tokens = append(statement.Tokens, exp)
 
 	// ';'
-	end, err := c.consumeSymbol(rune(';'))
+	end, err := c.consumeSymbol(token.SymSemiColon)
 	if err != nil {
 		return nil, fmt.Errorf("compileLetStatement: symbol ';' is missing, got %v", c.tokenizer.Current)
 	}
@@ -179,7 +179,7 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 	statement.Tokens = append(statement.Tokens, *kwd)
 
 	// '('
-	open, err := c.consumeSymbol(rune('('))
+	open, err := c.consumeSymbol(token.SymLeftParenthesis)
 	if err != nil {
 		return nil, fmt.Errorf("compileIfStatement: symbol '(' is missing, got %v", c.tokenizer.Current)
 	}
@@ -193,7 +193,7 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 	statement.Tokens = append(statement.Tokens, exp)
 
 	// ')'
-	close, err := c.consumeSymbol(rune(')'))
+	close, err := c.consumeSymbol(token.SymRightParenthesis)
 	if err != nil {
 		return nil, fmt.Errorf("compileIfStatement: symbol ')' is missing, got %v", c.tokenizer.Current)
 	}
@@ -201,7 +201,7 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 
 	consumeStatements := func() error {
 		// '{'
-		open, err := c.consumeSymbol(rune('{'))
+		open, err := c.consumeSymbol(token.SymLeftCurlyBracket)
 		if err != nil {
 			return fmt.Errorf("compileIfStatement: symbol '{' is missing, got %v", c.tokenizer.Current)
 		}
@@ -216,7 +216,7 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 		statement.Tokens = append(statement.Tokens, statements)
 
 		// '}'
-		close, err := c.consumeSymbol(rune('}'))
+		close, err := c.consumeSymbol(token.SymRightCurlyBracket)
 		if err != nil {
 			return fmt.Errorf("compileIfStatement: symbol '}' is missing, got %v", c.tokenizer.Current)
 		}
@@ -251,7 +251,7 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 	statement.Tokens = append(statement.Tokens, *kwd)
 
 	// '('
-	if open, err := c.consumeSymbol(rune('(')); err != nil {
+	if open, err := c.consumeSymbol(token.SymLeftParenthesis); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol '(' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *open)
@@ -265,14 +265,14 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 	statement.Tokens = append(statement.Tokens, exp)
 
 	// ')'
-	if close, err := c.consumeSymbol(rune(')')); err != nil {
+	if close, err := c.consumeSymbol(token.SymRightParenthesis); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol ')' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *close)
 	}
 
 	// '{'
-	if open, err := c.consumeSymbol(rune('{')); err != nil {
+	if open, err := c.consumeSymbol(token.SymLeftCurlyBracket); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol '{' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *open)
@@ -287,7 +287,7 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 	statement.Tokens = append(statement.Tokens, statements)
 
 	// '}'
-	if close, err := c.consumeSymbol(rune('}')); err != nil {
+	if close, err := c.consumeSymbol(token.SymRightCurlyBracket); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol '}' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *close)
@@ -314,7 +314,7 @@ func (c *Compiler) compileDoStatement() (*DoStatement, error) {
 	statement.Tokens = append(statement.Tokens, call...)
 
 	// ';'
-	if end, err := c.consumeSymbol(rune(';')); err != nil {
+	if end, err := c.consumeSymbol(token.SymSemiColon); err != nil {
 		return nil, fmt.Errorf("compileDoStatement: symbol ';' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *end)
@@ -334,7 +334,7 @@ func (c *Compiler) compileReturnStatement() (*ReturnStatement, error) {
 	}
 
 	// expression?
-	if end, err := c.tokenizer.Symbol(); !(err == nil && end.Val() == rune(';')) {
+	if end, err := c.tokenizer.Symbol(); !(err == nil && end.Val() == token.SymSemiColon) {
 		exp, err := c.CompileExpression()
 		if err != nil {
 			return nil, fmt.Errorf("compileReturnStatement: %w", err)
@@ -343,7 +343,7 @@ func (c *Compiler) compileReturnStatement() (*ReturnStatement, error) {
 	}
 
 	// ';'
-	if end, err := c.consumeSymbol(rune(';')); err != nil {
+	if end, err := c.consumeSymbol(token.SymSemiColon); err != nil {
 		return nil, fmt.Errorf("compileReturnStatement: symbol ';' is missing, got %v", c.tokenizer.Current)
 	} else {
 		statement.Tokens = append(statement.Tokens, *end)

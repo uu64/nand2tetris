@@ -83,7 +83,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	class.Tokens = append(class.Tokens, className)
 
 	// '{'
-	open, err := c.consumeSymbol(rune('{'))
+	open, err := c.consumeSymbol(token.SymLeftCurlyBracket)
 	if err != nil {
 		return nil, fmt.Errorf("CompileClass: symbol '{' is missing, got %v", c.tokenizer.Current)
 	}
@@ -115,7 +115,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	}
 
 	// '}'
-	close, err := c.consumeSymbol(rune('}'))
+	close, err := c.consumeSymbol(token.SymRightCurlyBracket)
 	if err != nil {
 		return nil, fmt.Errorf("CompileClass: symbol '}' is missing, got %v", c.tokenizer.Current)
 	}
@@ -155,14 +155,14 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 		classVarDec.Tokens = append(classVarDec.Tokens, varName)
 
 		// check additional varName
-		s, err := c.consumeSymbol(rune(','), rune(';'))
+		s, err := c.consumeSymbol(token.SymComma, token.SymSemiColon)
 		if err != nil {
 			return nil, fmt.Errorf("CompileVarDec: expected \",\" or \";\", got %v", s)
 		}
 
-		if s.Val() == rune(',') {
+		if s.Val() == token.SymComma {
 			classVarDec.Tokens = append(classVarDec.Tokens, *s)
-		} else if s.Val() == rune(';') {
+		} else if s.Val() == token.SymSemiColon {
 			classVarDec.Tokens = append(classVarDec.Tokens, *s)
 			break
 		}
@@ -202,7 +202,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineName)
 
 	// '('
-	open, err := c.consumeSymbol(rune('('))
+	open, err := c.consumeSymbol(token.SymLeftParenthesis)
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: symbol '(' is missing, got %v", c.tokenizer.Current)
 	}
@@ -217,7 +217,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	subroutineDec.Tokens = append(subroutineDec.Tokens, paramList)
 
 	// ')'
-	close, err := c.consumeSymbol(rune(')'))
+	close, err := c.consumeSymbol(token.SymRightParenthesis)
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: symbol ')' is missing, got %v", c.tokenizer.Current)
 	}
@@ -262,7 +262,7 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 			if err != nil {
 				return err
 			}
-			if s.Val() != rune(',') {
+			if s.Val() != token.SymComma {
 				break
 			}
 			parameterList.Tokens = append(parameterList.Tokens, s)
@@ -298,7 +298,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	subroutineBody := &SubroutineBody{Tokens: []token.Element{}}
 
 	// '{'
-	open, err := c.consumeSymbol(rune('{'))
+	open, err := c.consumeSymbol(token.SymLeftCurlyBracket)
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineBody: symbol '{' is missing, got %v", c.tokenizer.Current)
 	}
@@ -325,7 +325,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	subroutineBody.Tokens = append(subroutineBody.Tokens, statements)
 
 	// '}'
-	close, err := c.consumeSymbol(rune('}'))
+	close, err := c.consumeSymbol(token.SymRightCurlyBracket)
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineBody: symbol '}' is missing, got %v", c.tokenizer.Current)
 	}
@@ -365,14 +365,14 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 		varDec.Tokens = append(varDec.Tokens, varName)
 
 		// check additional varName
-		s, err := c.consumeSymbol(rune(','), rune(';'))
+		s, err := c.consumeSymbol(token.SymComma, token.SymSemiColon)
 		if err != nil {
 			return nil, fmt.Errorf("CompileVarDec: expected \",\" or \";\", got %v", s)
 		}
 
-		if s.Val() == rune(',') {
+		if s.Val() == token.SymComma {
 			varDec.Tokens = append(varDec.Tokens, *s)
-		} else if s.Val() == rune(';') {
+		} else if s.Val() == token.SymSemiColon {
 			varDec.Tokens = append(varDec.Tokens, *s)
 			break
 		}

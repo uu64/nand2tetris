@@ -2,26 +2,50 @@ package token
 
 import "encoding/xml"
 
+type SymbolType rune
+
+const (
+	SymLeftCurlyBracket   = rune('{')
+	SymLeftParenthesis    = rune('(')
+	SymLeftSquareBracket  = rune('[')
+	SymRightCurlyBracket  = rune('}')
+	SymRightParenthesis   = rune(')')
+	SymRightSquareBracket = rune(']')
+	SymDot                = rune('.')
+	SymComma              = rune(',')
+	SymSemiColon          = rune(';')
+	SymPlus               = rune('+')
+	SymMinus              = rune('-')
+	SymAsterisk           = rune('*')
+	SymSlash              = rune('/')
+	SymAmpersand          = rune('&')
+	SymBar                = rune('|')
+	SymLessThan           = rune('<')
+	SymGreaterThan        = rune('>')
+	SymEqual              = rune('=')
+	SymTilde              = rune('~')
+)
+
 var symbols = []rune{
-	rune('{'),
-	rune('}'),
-	rune('('),
-	rune(')'),
-	rune('['),
-	rune(']'),
-	rune('.'),
-	rune(','),
-	rune(';'),
-	rune('+'),
-	rune('-'),
-	rune('*'),
-	rune('/'),
-	rune('&'),
-	rune('|'),
-	rune('<'),
-	rune('>'),
-	rune('='),
-	rune('~'),
+	SymLeftCurlyBracket,
+	SymLeftParenthesis,
+	SymLeftSquareBracket,
+	SymRightCurlyBracket,
+	SymRightParenthesis,
+	SymRightSquareBracket,
+	SymDot,
+	SymComma,
+	SymSemiColon,
+	SymPlus,
+	SymMinus,
+	SymAsterisk,
+	SymSlash,
+	SymAmpersand,
+	SymBar,
+	SymLessThan,
+	SymGreaterThan,
+	SymEqual,
+	SymTilde,
 }
 
 type Symbol struct {
