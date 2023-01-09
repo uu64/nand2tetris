@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/uu64/nand2tetris/compiler/internal/token"
+	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 )
 
 type Cmd struct {

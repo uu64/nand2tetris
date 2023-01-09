@@ -17,6 +17,8 @@ check_compiler() {
     echo "pass"
 }
 
+go version
+
 cat<<EOF
 
 ####################

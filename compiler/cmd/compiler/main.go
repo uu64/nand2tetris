@@ -9,8 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/uu64/nand2tetris/compiler/internal/compile"
-	"github.com/uu64/nand2tetris/compiler/internal/token"
+	compiler "github.com/uu64/nand2tetris/compiler/internal/engine"
+	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 )
 
 type Cmd struct {
@@ -40,18 +40,18 @@ func (cmd *Cmd) write(b []byte) error {
 	return nil
 }
 
-func (cmd *Cmd) encodeXML(class *compile.Class) ([]byte, error) {
+func (cmd *Cmd) encodeXML(class *compiler.Class) ([]byte, error) {
 	return xml.MarshalIndent(class, "", "  ")
 }
 
-func (cmd *Cmd) compile() (*compile.Class, error) {
+func (cmd *Cmd) compile() (*compiler.Class, error) {
 	f, err := os.Open(cmd.source)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	compiler, err := compile.New(token.New(f))
+	compiler, err := compiler.New(tokenizer.New(f))
 	if err != nil {
 		return nil, err
 	}

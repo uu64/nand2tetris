@@ -1,10 +1,10 @@
-package compile
+package engine
 
 import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/uu64/nand2tetris/compiler/internal/token"
+	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 )
 
 type Class struct {
