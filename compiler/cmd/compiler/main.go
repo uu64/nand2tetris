@@ -5,12 +5,18 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	compiler "github.com/uu64/nand2tetris/compiler/internal/engine"
 	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
+)
+
+const (
+	extJack = ".jack"
 )
 
 type Cmd struct {
@@ -99,17 +105,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dir := filepath.Dir(abs)
-	base := filepath.Base(abs)
-	ext := filepath.Ext(abs)
-	if ext != ".jack" {
-		log.Fatalf("invalid extention: %s\n", ext)
-	}
-	output := fmt.Sprintf("%s/%s.xml", dir, base[0:len(base)-len(ext)])
 
-	// TODO: directoryかファイル単体を渡す
-	cmd := New(abs, output)
-	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
-	}
+	filepath.Walk(abs, func(path string, info fs.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		if strings.HasSuffix(info.Name(), extJack) {
+			output := fmt.Sprintf("%s.xml", path[0:len(path)-len(extJack)])
+
+			cmd := New(path, output)
+			if err := cmd.Run(); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		return nil
+	})
 }
