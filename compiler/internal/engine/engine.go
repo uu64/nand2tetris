@@ -3,11 +3,13 @@ package engine
 import (
 	"fmt"
 
+	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 )
 
 type Compiler struct {
 	tokenizer *token.Tokenizer
+	symtab    symtab.Symtab
 }
 
 func New(t *token.Tokenizer) (*Compiler, error) {
@@ -15,7 +17,7 @@ func New(t *token.Tokenizer) (*Compiler, error) {
 		return nil, fmt.Errorf("CompileClass: %w", err)
 	}
 
-	return &Compiler{t}, nil
+	return &Compiler{t, *symtab.New()}, nil
 }
 
 func (c *Compiler) consumeKeyword(expected ...token.KeywordType) (*token.Keyword, error) {

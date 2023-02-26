@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 
+	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 )
 
@@ -81,6 +82,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 		return nil, fmt.Errorf("CompileClass: %w", err)
 	}
 	class.Tokens = append(class.Tokens, className)
+	c.symtab.ClassName = className.Val()
 
 	// '{'
 	open, err := c.consumeSymbol(token.SymLeftCurlyBracket)
@@ -121,6 +123,8 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	}
 	class.Tokens = append(class.Tokens, *close)
 
+	// fmt.Println(c.symtab.ClassTable())
+
 	return class, nil
 }
 
@@ -135,11 +139,11 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 	classVarDec.Tokens = append(classVarDec.Tokens, *kwd)
 
 	// type
-	types, err := c.compileType()
+	typ, err := c.compileType()
 	if err != nil {
 		return nil, fmt.Errorf("CompileClassVarDec: %w", err)
 	}
-	classVarDec.Tokens = append(classVarDec.Tokens, types...)
+	classVarDec.Tokens = append(classVarDec.Tokens, typ)
 
 	if err := c.tokenizer.Advance(); err != nil {
 		return nil, err
@@ -153,6 +157,8 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 			return nil, fmt.Errorf("CompileClassVarDec: %w", err)
 		}
 		classVarDec.Tokens = append(classVarDec.Tokens, varName)
+
+		c.symtab.Define(varName.Label, symtab.ElmToTyp(typ), symtab.KwdToKind(kwd))
 
 		// check additional varName
 		s, err := c.consumeSymbol(token.SymComma, token.SymSemiColon)
@@ -184,11 +190,11 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	if kwd, err := c.tokenizer.Keyword(); err == nil && kwd.Val() == token.KwdVoid {
 		subroutineDec.Tokens = append(subroutineDec.Tokens, *kwd)
 	} else {
-		types, err := c.compileType()
+		typ, err := c.compileType()
 		if err != nil {
 			return nil, fmt.Errorf("CompileSubroutineDec: %w", err)
 		}
-		subroutineDec.Tokens = append(subroutineDec.Tokens, types...)
+		subroutineDec.Tokens = append(subroutineDec.Tokens, typ)
 	}
 	if err := c.tokenizer.Advance(); err != nil {
 		return nil, err
@@ -240,11 +246,11 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 	consumeParameters := func() error {
 		for {
 			// type
-			types, err := c.compileType()
+			typ, err := c.compileType()
 			if err != nil {
 				return fmt.Errorf("CompileParameterList: %w", err)
 			}
-			parameterList.Tokens = append(parameterList.Tokens, types...)
+			parameterList.Tokens = append(parameterList.Tokens, typ)
 
 			if err := c.tokenizer.Advance(); err != nil {
 				return err
@@ -345,11 +351,11 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 	varDec.Tokens = append(varDec.Tokens, *kwd)
 
 	// type
-	types, err := c.compileType()
+	typ, err := c.compileType()
 	if err != nil {
 		return nil, fmt.Errorf("CompileVarDec: %w", err)
 	}
-	varDec.Tokens = append(varDec.Tokens, types...)
+	varDec.Tokens = append(varDec.Tokens, typ)
 
 	if err := c.tokenizer.Advance(); err != nil {
 		return nil, err
@@ -380,9 +386,7 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 	return varDec, nil
 }
 
-func (c *Compiler) compileType() ([]token.Element, error) {
-	tokens := []token.Element{}
-
+func (c *Compiler) compileType() (token.Element, error) {
 	tkType := c.tokenizer.Current.TokenType()
 	switch tkType {
 	case token.TkKeyword:
@@ -391,16 +395,14 @@ func (c *Compiler) compileType() ([]token.Element, error) {
 		if kwd.Val() != token.KwdInt && kwd.Val() != token.KwdChar && kwd.Val() != token.KwdBoolean {
 			return nil, fmt.Errorf("compileType: invalid type %s", kwd.Label)
 		}
-		tokens = append(tokens, *kwd)
+		return kwd, nil
 	case token.TkIdentifier:
 		// ignore the error because it is already checked that the token type is IDENTIFIER
 		id, _ := c.tokenizer.Identifier()
-		tokens = append(tokens, *id)
+		return id, nil
 	default:
 		return nil, fmt.Errorf("compileType: type should start with KEYWORD or IDENTIFIER, got %d", tkType)
 	}
-
-	return tokens, nil
 }
 
 func (c *Compiler) compileName() (*token.Identifier, error) {
