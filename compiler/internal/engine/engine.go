@@ -57,12 +57,3 @@ func (c *Compiler) consumeSymbol(expected ...rune) (*token.Symbol, error) {
 
 	return nil, fmt.Errorf("consumeSymbol: expected %v, got %v", expected, symbol)
 }
-
-func (c *Compiler) consumeIdentifier() (*token.Identifier, error) {
-	id, err := c.tokenizer.Identifier()
-	if err != nil {
-		return nil, fmt.Errorf("consumeIdentifier: %w", err)
-	}
-
-	return id, c.tokenizer.Advance()
-}

@@ -186,7 +186,7 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	tokens := []token.Element{}
 
 	// varName
-	name, err := c.consumeIdentifier()
+	name, err := c.compileName()
 	if err != nil {
 		return nil, fmt.Errorf("compileArrayDec: %w", err)
 	}
@@ -220,7 +220,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 	tokens := []token.Element{}
 
 	// subroutineName or (className | varName)
-	name, err := c.consumeIdentifier()
+	name, err := c.compileName()
 	if err != nil {
 		return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 	}
@@ -271,7 +271,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		}
 
 		// subroutineName
-		id, err := c.consumeIdentifier()
+		id, err := c.compileName()
 		if err != nil {
 			return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 		}

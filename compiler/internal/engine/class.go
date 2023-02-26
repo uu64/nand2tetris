@@ -433,13 +433,13 @@ func (c *Compiler) compileName() (*token.Identifier, error) {
 	} else {
 		exists = false
 	}
-	// fmt.Printf("id name: %s\n", name)
-	// fmt.Printf("class name: %s\n", c.symtab.ClassName)
-	// fmt.Printf("subroutine name: %s\n", c.symtab.SubroutineName)
-	// fmt.Printf("class: %v\n", c.symtab.ClassTable())
-	// fmt.Printf("subroutine: %v\n", c.symtab.SubroutineTable())
-	// fmt.Printf("exists: %v\n", exists)
-	// fmt.Println()
+	fmt.Printf("id name: %s\n", name)
+	fmt.Printf("class name: %s\n", c.symtab.ClassName)
+	fmt.Printf("subroutine name: %s\n", c.symtab.SubroutineName)
+	fmt.Printf("class: %v\n", c.symtab.ClassTable())
+	fmt.Printf("subroutine: %v\n", c.symtab.SubroutineTable())
+	fmt.Printf("exists: %v\n", exists)
+	fmt.Println()
 
 	if exists {
 		id.Kind = c.symtab.KindOf(name).String()
@@ -451,11 +451,7 @@ func (c *Compiler) compileName() (*token.Identifier, error) {
 		return nil, fmt.Errorf("compileName: %w", err)
 	}
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
-	return id, nil
+	return id, c.tokenizer.Advance()
 }
 
 func (c *Compiler) defineSymbol(id *token.Identifier, symName, typ string, kind symtab.SymbolKind) {
