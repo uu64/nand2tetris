@@ -178,6 +178,8 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 
 func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	subroutineDec := &SubroutineDec{Tokens: []token.Element{}}
+	c.symtab.StartSubroutine()
+	c.symtab.Define("this", c.symtab.ClassName, symtab.SkArg)
 
 	// ('constructor' | 'function' | 'method')
 	if kwd, err := c.consumeKeyword(token.KwdConstructor, token.KwdFunction, token.KwdMethod); err != nil {
@@ -236,6 +238,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineBody)
 
+	// fmt.Println(c.symtab.SubroutineTable())
 	return subroutineDec, nil
 }
 
@@ -262,6 +265,7 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 				return fmt.Errorf("CompileParameterList: %w", err)
 			}
 			parameterList.Tokens = append(parameterList.Tokens, varName)
+			c.symtab.Define(varName.Label, symtab.ElmToTyp(typ), symtab.SkArg)
 
 			// check additional parameter
 			s, err := c.tokenizer.Symbol()
@@ -369,6 +373,7 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 			return nil, fmt.Errorf("CompileVarDec: %w", err)
 		}
 		varDec.Tokens = append(varDec.Tokens, varName)
+		c.symtab.Define(varName.Label, symtab.ElmToTyp(typ), symtab.SkVar)
 
 		// check additional varName
 		s, err := c.consumeSymbol(token.SymComma, token.SymSemiColon)
