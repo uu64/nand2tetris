@@ -9,7 +9,10 @@ import (
 type SymbolKind int
 
 const (
-	SkStatic SymbolKind = iota
+	SkNone SymbolKind = iota
+	SkClass
+	SkSubroutine
+	SkStatic
 	SkField
 	SkArg
 	SkVar
@@ -17,6 +20,10 @@ const (
 
 func (sk SymbolKind) String() string {
 	switch sk {
+	case SkClass:
+		return "class"
+	case SkSubroutine:
+		return "subroutine"
 	case SkStatic:
 		return "static"
 	case SkField:
@@ -25,8 +32,8 @@ func (sk SymbolKind) String() string {
 		return "argument"
 	case SkVar:
 		return "var"
-	default:
-		return "not defined"
+	default: //SkNone
+		return "none"
 	}
 }
 
@@ -89,58 +96,58 @@ func (st *Symtab) VarCount(kind SymbolKind) int {
 	return st.indexTable[kind]
 }
 
-func (st *Symtab) KindOf(name string) *SymbolKind {
+func (st *Symtab) KindOf(name string) SymbolKind {
 	{
 		v, ok := st.subroutineTable[name]
 		if ok {
-			return &v.kind
+			return v.kind
 		}
 	}
 
 	{
 		v, ok := st.classTable[name]
 		if ok {
-			return &v.kind
+			return v.kind
 		}
 	}
 
-	return nil
+	return SkNone
 }
 
-func (st *Symtab) TypeOf(name string) *string {
+func (st *Symtab) TypeOf(name string) string {
 	{
 		v, ok := st.subroutineTable[name]
 		if ok {
-			return &v.typ
+			return v.typ
 		}
 	}
 
 	{
 		v, ok := st.classTable[name]
 		if ok {
-			return &v.typ
+			return v.typ
 		}
 	}
 
-	return nil
+	return ""
 }
 
-func (st *Symtab) IndexOf(name string) *int {
+func (st *Symtab) IndexOf(name string) int {
 	{
 		v, ok := st.subroutineTable[name]
 		if ok {
-			return &v.index
+			return v.index
 		}
 	}
 
 	{
 		v, ok := st.classTable[name]
 		if ok {
-			return &v.index
+			return v.index
 		}
 	}
 
-	return nil
+	return -1
 }
 
 func (st *Symtab) ClassTable() map[string]symbolAttr {

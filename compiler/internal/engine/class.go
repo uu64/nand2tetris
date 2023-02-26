@@ -83,6 +83,10 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	}
 	class.Tokens = append(class.Tokens, className)
 	c.symtab.ClassName = className.Val()
+	className.Category = symtab.SkClass.String()
+	className.Kind = symtab.SkNone.String()
+	className.Index = -1
+	className.IsDefined = true
 
 	// '{'
 	open, err := c.consumeSymbol(token.SymLeftCurlyBracket)
@@ -158,7 +162,7 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 		}
 		classVarDec.Tokens = append(classVarDec.Tokens, varName)
 
-		c.symtab.Define(varName.Label, symtab.ElmToTyp(typ), symtab.KwdToKind(kwd))
+		c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.KwdToKind(kwd))
 
 		// check additional varName
 		s, err := c.consumeSymbol(token.SymComma, token.SymSemiColon)
@@ -179,7 +183,7 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	subroutineDec := &SubroutineDec{Tokens: []token.Element{}}
 	c.symtab.StartSubroutine()
-	c.symtab.Define("this", c.symtab.ClassName, symtab.SkArg)
+	c.defineSymbol(&token.Identifier{Label: "this"}, "this", c.symtab.ClassName, symtab.SkArg)
 
 	// ('constructor' | 'function' | 'method')
 	if kwd, err := c.consumeKeyword(token.KwdConstructor, token.KwdFunction, token.KwdMethod); err != nil {
@@ -209,6 +213,10 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineName)
 	c.symtab.SubroutineName = subroutineName.Val()
+	subroutineName.Category = symtab.SkSubroutine.String()
+	subroutineName.Kind = symtab.SkNone.String()
+	subroutineName.Index = -1
+	subroutineName.IsDefined = true
 
 	// '('
 	open, err := c.consumeSymbol(token.SymLeftParenthesis)
@@ -266,7 +274,7 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 				return fmt.Errorf("CompileParameterList: %w", err)
 			}
 			parameterList.Tokens = append(parameterList.Tokens, varName)
-			c.symtab.Define(varName.Label, symtab.ElmToTyp(typ), symtab.SkArg)
+			c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.SkArg)
 
 			// check additional parameter
 			s, err := c.tokenizer.Symbol()
@@ -374,7 +382,7 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 			return nil, fmt.Errorf("CompileVarDec: %w", err)
 		}
 		varDec.Tokens = append(varDec.Tokens, varName)
-		c.symtab.Define(varName.Label, symtab.ElmToTyp(typ), symtab.SkVar)
+		c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.SkVar)
 
 		// check additional varName
 		s, err := c.consumeSymbol(token.SymComma, token.SymSemiColon)
@@ -414,22 +422,30 @@ func (c *Compiler) compileType() (token.Element, error) {
 func (c *Compiler) compileName() (*token.Identifier, error) {
 	id, err := c.tokenizer.Identifier()
 
-	// name := id.Label
-	// isDefined := true
-	// if category := c.symtab.KindOf(name); category != nil {
-	// 	id.Category = category.String()
-	// } else if name == c.symtab.SubroutineName {
-	// 	id.Category = "subroutine"
-	// } else if name == c.symtab.ClassName {
-	// 	id.Category = "class"
-	// } else {
-	// 	isDefined = false
-	// }
+	name := id.Label
+	exists := true
+	if category := c.symtab.KindOf(name); category != symtab.SkNone {
+		id.Category = category.String()
+	} else if name == c.symtab.SubroutineName {
+		id.Category = "subroutine"
+	} else if name == c.symtab.ClassName {
+		id.Category = "class"
+	} else {
+		exists = false
+	}
+	// fmt.Printf("id name: %s\n", name)
+	// fmt.Printf("class name: %s\n", c.symtab.ClassName)
+	// fmt.Printf("subroutine name: %s\n", c.symtab.SubroutineName)
+	// fmt.Printf("class: %v\n", c.symtab.ClassTable())
+	// fmt.Printf("subroutine: %v\n", c.symtab.SubroutineTable())
+	// fmt.Printf("exists: %v\n", exists)
+	// fmt.Println()
 
-	// if isDefined {
-	// 	id.Kind = c.symtab.KindOf(name).String()
-	// 	id.Index = *c.symtab.IndexOf(name)
-	// }
+	if exists {
+		id.Kind = c.symtab.KindOf(name).String()
+		id.Index = c.symtab.IndexOf(name)
+		id.IsDefined = false
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("compileName: %w", err)
@@ -440,4 +456,12 @@ func (c *Compiler) compileName() (*token.Identifier, error) {
 	}
 
 	return id, nil
+}
+
+func (c *Compiler) defineSymbol(id *token.Identifier, symName, typ string, kind symtab.SymbolKind) {
+	c.symtab.Define(symName, typ, kind)
+	id.Category = c.symtab.KindOf(symName).String()
+	id.Kind = c.symtab.KindOf(symName).String()
+	id.Index = c.symtab.IndexOf(symName)
+	id.IsDefined = true
 }
