@@ -54,19 +54,19 @@ type Symbol struct {
 	val     rune     `xml:"-"`
 }
 
-func (tk Symbol) TokenType() TokenType {
+func (tk *Symbol) TokenType() TokenType {
 	return TkSymbol
 }
 
-func (tk Symbol) ElementType() ElementType {
+func (tk *Symbol) ElementType() ElementType {
 	return ElToken
 }
 
-func (tk Symbol) Val() rune {
+func (tk *Symbol) Val() rune {
 	return tk.val
 }
 
-func (tk Symbol) String() string {
+func (tk *Symbol) String() string {
 	return string(tk.val)
 }
 

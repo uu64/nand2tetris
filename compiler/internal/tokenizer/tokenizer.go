@@ -47,8 +47,8 @@ func (t *Tokenizer) Keyword() (ptr *Keyword, err error) {
 		err = fmt.Errorf("Keyword: token type is invalid: %v", tkType)
 		return
 	}
-	kwd := t.Current.(Keyword)
-	ptr = &kwd
+	kwd := t.Current.(*Keyword)
+	ptr = kwd
 	return
 }
 
@@ -57,8 +57,8 @@ func (t *Tokenizer) Symbol() (ptr *Symbol, err error) {
 		err = fmt.Errorf("Symbol: token type is invalid: %v", tkType)
 		return
 	}
-	symbol := t.Current.(Symbol)
-	ptr = &symbol
+	symbol := t.Current.(*Symbol)
+	ptr = symbol
 	return
 }
 
@@ -67,8 +67,8 @@ func (t *Tokenizer) Identifier() (ptr *Identifier, err error) {
 		err = fmt.Errorf("Identifier: token type is invalid: %v", tkType)
 		return
 	}
-	id := t.Current.(Identifier)
-	ptr = &id
+	id := t.Current.(*Identifier)
+	ptr = id
 	return
 }
 
@@ -77,8 +77,8 @@ func (t *Tokenizer) IntVal() (ptr *IntConst, err error) {
 		err = fmt.Errorf("IntVal: token type is invalid: %v", tkType)
 		return
 	}
-	v := t.Current.(IntConst)
-	ptr = &v
+	v := t.Current.(*IntConst)
+	ptr = v
 	return
 }
 
@@ -87,8 +87,8 @@ func (t *Tokenizer) StringVal() (ptr *StringConst, err error) {
 		err = fmt.Errorf("StringVal: token type is invalid: %v", tkType)
 		return
 	}
-	v := t.Current.(StringConst)
-	ptr = &v
+	v := t.Current.(*StringConst)
+	ptr = v
 	return
 }
 
@@ -200,7 +200,7 @@ func (t *Tokenizer) tokenize() (err error) {
 		return
 	}
 	if symbol != nil {
-		t.Current = *symbol
+		t.Current = symbol
 		return
 	}
 
@@ -241,22 +241,22 @@ func (t *Tokenizer) tokenize() (err error) {
 	s := string(runes)
 
 	if kwd := toKeyword(s); kwd != nil {
-		t.Current = *kwd
+		t.Current = kwd
 		return
 	}
 
 	if i := toIntConst(s); i != nil {
-		t.Current = *i
+		t.Current = i
 		return
 	}
 
 	if str := toStrConst(s); str != nil {
-		t.Current = *str
+		t.Current = str
 		return
 	}
 
 	if id := toID(s); id != nil {
-		t.Current = *id
+		t.Current = id
 		return
 	}
 

@@ -74,7 +74,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileClass: class should start with CLASS, got %v", c.tokenizer.Current)
 	}
-	class.Tokens = append(class.Tokens, *kwd)
+	class.Tokens = append(class.Tokens, kwd)
 
 	// className
 	className, err := c.compileName()
@@ -89,7 +89,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileClass: symbol '{' is missing, got %v", c.tokenizer.Current)
 	}
-	class.Tokens = append(class.Tokens, *open)
+	class.Tokens = append(class.Tokens, open)
 
 	// classVarDec* subroutineDec*
 	for c.tokenizer.TokenType() == token.TkKeyword {
@@ -121,7 +121,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileClass: symbol '}' is missing, got %v", c.tokenizer.Current)
 	}
-	class.Tokens = append(class.Tokens, *close)
+	class.Tokens = append(class.Tokens, close)
 
 	// fmt.Println(c.symtab.ClassTable())
 
@@ -136,7 +136,7 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileClassVarDec: classVarDec should start with STATIC or FIELD, got %v", c.tokenizer.Current)
 	}
-	classVarDec.Tokens = append(classVarDec.Tokens, *kwd)
+	classVarDec.Tokens = append(classVarDec.Tokens, kwd)
 
 	// type
 	typ, err := c.compileType()
@@ -167,9 +167,9 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 		}
 
 		if s.Val() == token.SymComma {
-			classVarDec.Tokens = append(classVarDec.Tokens, *s)
+			classVarDec.Tokens = append(classVarDec.Tokens, s)
 		} else if s.Val() == token.SymSemiColon {
-			classVarDec.Tokens = append(classVarDec.Tokens, *s)
+			classVarDec.Tokens = append(classVarDec.Tokens, s)
 			break
 		}
 	}
@@ -185,12 +185,12 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	if kwd, err := c.consumeKeyword(token.KwdConstructor, token.KwdFunction, token.KwdMethod); err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: classVarDec should start with CONSTRUCTOR or FUNCTION or METHOD, got %v", c.tokenizer.Current)
 	} else {
-		subroutineDec.Tokens = append(subroutineDec.Tokens, *kwd)
+		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 	}
 
 	// ('void' | type)
 	if kwd, err := c.tokenizer.Keyword(); err == nil && kwd.Val() == token.KwdVoid {
-		subroutineDec.Tokens = append(subroutineDec.Tokens, *kwd)
+		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 	} else {
 		typ, err := c.compileType()
 		if err != nil {
@@ -208,13 +208,14 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 		return nil, fmt.Errorf("CompileSubroutineDec: %w", err)
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineName)
+	c.symtab.SubroutineName = subroutineName.Val()
 
 	// '('
 	open, err := c.consumeSymbol(token.SymLeftParenthesis)
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: symbol '(' is missing, got %v", c.tokenizer.Current)
 	}
-	subroutineDec.Tokens = append(subroutineDec.Tokens, *open)
+	subroutineDec.Tokens = append(subroutineDec.Tokens, open)
 
 	// parameterList
 	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileParameterList()
@@ -229,7 +230,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: symbol ')' is missing, got %v", c.tokenizer.Current)
 	}
-	subroutineDec.Tokens = append(subroutineDec.Tokens, *close)
+	subroutineDec.Tokens = append(subroutineDec.Tokens, close)
 
 	// subroutineBody
 	subroutineBody, err := c.CompileSubroutineBody()
@@ -312,7 +313,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineBody: symbol '{' is missing, got %v", c.tokenizer.Current)
 	}
-	subroutineBody.Tokens = append(subroutineBody.Tokens, *open)
+	subroutineBody.Tokens = append(subroutineBody.Tokens, open)
 
 	// varDec*
 	for {
@@ -339,7 +340,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineBody: symbol '}' is missing, got %v", c.tokenizer.Current)
 	}
-	subroutineBody.Tokens = append(subroutineBody.Tokens, *close)
+	subroutineBody.Tokens = append(subroutineBody.Tokens, close)
 
 	return subroutineBody, nil
 }
@@ -352,7 +353,7 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileVarDec: varDec should start with VAR, got %v", c.tokenizer.Current)
 	}
-	varDec.Tokens = append(varDec.Tokens, *kwd)
+	varDec.Tokens = append(varDec.Tokens, kwd)
 
 	// type
 	typ, err := c.compileType()
@@ -382,9 +383,9 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 		}
 
 		if s.Val() == token.SymComma {
-			varDec.Tokens = append(varDec.Tokens, *s)
+			varDec.Tokens = append(varDec.Tokens, s)
 		} else if s.Val() == token.SymSemiColon {
-			varDec.Tokens = append(varDec.Tokens, *s)
+			varDec.Tokens = append(varDec.Tokens, s)
 			break
 		}
 	}
@@ -412,6 +413,24 @@ func (c *Compiler) compileType() (token.Element, error) {
 
 func (c *Compiler) compileName() (*token.Identifier, error) {
 	id, err := c.tokenizer.Identifier()
+
+	// name := id.Label
+	// isDefined := true
+	// if category := c.symtab.KindOf(name); category != nil {
+	// 	id.Category = category.String()
+	// } else if name == c.symtab.SubroutineName {
+	// 	id.Category = "subroutine"
+	// } else if name == c.symtab.ClassName {
+	// 	id.Category = "class"
+	// } else {
+	// 	isDefined = false
+	// }
+
+	// if isDefined {
+	// 	id.Kind = c.symtab.KindOf(name).String()
+	// 	id.Index = *c.symtab.IndexOf(name)
+	// }
+
 	if err != nil {
 		return nil, fmt.Errorf("compileName: %w", err)
 	}

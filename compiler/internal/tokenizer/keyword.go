@@ -57,19 +57,19 @@ type Keyword struct {
 	Label   string   `xml:",chardata"`
 }
 
-func (tk Keyword) TokenType() TokenType {
+func (tk *Keyword) TokenType() TokenType {
 	return TkKeyword
 }
 
-func (tk Keyword) ElementType() ElementType {
+func (tk *Keyword) ElementType() ElementType {
 	return ElToken
 }
 
-func (tk Keyword) Val() KeywordType {
+func (tk *Keyword) Val() KeywordType {
 	return KwdLabelMap[tk.Label]
 }
 
-func (tk Keyword) String() string {
+func (tk *Keyword) String() string {
 	return tk.Label
 }
 

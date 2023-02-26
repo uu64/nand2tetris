@@ -42,6 +42,7 @@ func (sa symbolAttr) String() string {
 
 type Symtab struct {
 	ClassName       string
+	SubroutineName  string
 	classTable      map[string]symbolAttr
 	subroutineTable map[string]symbolAttr
 	indexTable      map[SymbolKind]int
@@ -90,14 +91,14 @@ func (st *Symtab) VarCount(kind SymbolKind) int {
 
 func (st *Symtab) KindOf(name string) *SymbolKind {
 	{
-		v, ok := st.classTable[name]
+		v, ok := st.subroutineTable[name]
 		if ok {
 			return &v.kind
 		}
 	}
 
 	{
-		v, ok := st.subroutineTable[name]
+		v, ok := st.classTable[name]
 		if ok {
 			return &v.kind
 		}
@@ -108,14 +109,14 @@ func (st *Symtab) KindOf(name string) *SymbolKind {
 
 func (st *Symtab) TypeOf(name string) *string {
 	{
-		v, ok := st.classTable[name]
+		v, ok := st.subroutineTable[name]
 		if ok {
 			return &v.typ
 		}
 	}
 
 	{
-		v, ok := st.subroutineTable[name]
+		v, ok := st.classTable[name]
 		if ok {
 			return &v.typ
 		}
@@ -126,14 +127,14 @@ func (st *Symtab) TypeOf(name string) *string {
 
 func (st *Symtab) IndexOf(name string) *int {
 	{
-		v, ok := st.classTable[name]
+		v, ok := st.subroutineTable[name]
 		if ok {
 			return &v.index
 		}
 	}
 
 	{
-		v, ok := st.subroutineTable[name]
+		v, ok := st.classTable[name]
 		if ok {
 			return &v.index
 		}

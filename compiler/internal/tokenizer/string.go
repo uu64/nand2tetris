@@ -12,15 +12,15 @@ type StringConst struct {
 	Label   string   `xml:",chardata"`
 }
 
-func (tk StringConst) TokenType() TokenType {
+func (tk *StringConst) TokenType() TokenType {
 	return TkStringConst
 }
 
-func (tk StringConst) ElementType() ElementType {
+func (tk *StringConst) ElementType() ElementType {
 	return ElToken
 }
 
-func (tk StringConst) Val() string {
+func (tk *StringConst) Val() string {
 	return tk.Label
 }
 

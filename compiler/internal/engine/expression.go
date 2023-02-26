@@ -196,7 +196,7 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	if open, err := c.consumeSymbol(token.SymLeftSquareBracket); err != nil {
 		return nil, fmt.Errorf("CompileArrayDec: symbol '[' is missing, got %v", c.tokenizer.Current)
 	} else {
-		tokens = append(tokens, *open)
+		tokens = append(tokens, open)
 	}
 
 	// expression
@@ -210,7 +210,7 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	if close, err := c.consumeSymbol(token.SymRightSquareBracket); err != nil {
 		return nil, fmt.Errorf("CompileArrayDec: symbol ']' is missing, got %v", c.tokenizer.Current)
 	} else {
-		tokens = append(tokens, *close)
+		tokens = append(tokens, close)
 	}
 
 	return tokens, nil
@@ -231,7 +231,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		if open, err := c.consumeSymbol(token.SymLeftParenthesis); err != nil {
 			return fmt.Errorf("CompileSubroutineCall: symbol '(' is missing, got %v", c.tokenizer.Current)
 		} else {
-			tokens = append(tokens, *open)
+			tokens = append(tokens, open)
 		}
 
 		// expressionList
@@ -246,7 +246,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		if close, err := c.consumeSymbol(token.SymRightParenthesis); err != nil {
 			return fmt.Errorf("CompileSubroutineCall: symbol ')' is missing, got %v", c.tokenizer.Current)
 		} else {
-			tokens = append(tokens, *close)
+			tokens = append(tokens, close)
 		}
 
 		return nil

@@ -65,31 +65,31 @@ func (cmd *Cmd) parse() (*bytes.Buffer, error) {
 			if err != nil {
 				return nil, err
 			}
-			tokens.Tokens = append(tokens.Tokens, *v)
+			tokens.Tokens = append(tokens.Tokens, v)
 		case token.TkSymbol:
 			v, err := t.Symbol()
 			if err != nil {
 				return nil, err
 			}
-			tokens.Tokens = append(tokens.Tokens, *v)
+			tokens.Tokens = append(tokens.Tokens, v)
 		case token.TkIdentifier:
 			v, err := t.Identifier()
 			if err != nil {
 				return nil, err
 			}
-			tokens.Tokens = append(tokens.Tokens, *v)
+			tokens.Tokens = append(tokens.Tokens, v)
 		case token.TkIntConst:
 			v, err := t.IntVal()
 			if err != nil {
 				return nil, err
 			}
-			tokens.Tokens = append(tokens.Tokens, *v)
+			tokens.Tokens = append(tokens.Tokens, v)
 		case token.TkStringConst:
 			v, err := t.StringVal()
 			if err != nil {
 				return nil, err
 			}
-			tokens.Tokens = append(tokens.Tokens, *v)
+			tokens.Tokens = append(tokens.Tokens, v)
 		default:
 			continue
 		}

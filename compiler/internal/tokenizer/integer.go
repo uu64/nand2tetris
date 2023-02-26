@@ -13,15 +13,15 @@ type IntConst struct {
 	Label   string   `xml:",chardata"`
 }
 
-func (tk IntConst) TokenType() TokenType {
+func (tk *IntConst) TokenType() TokenType {
 	return TkIntConst
 }
 
-func (tk IntConst) ElementType() ElementType {
+func (tk *IntConst) ElementType() ElementType {
 	return ElToken
 }
 
-func (tk IntConst) Val() (int, error) {
+func (tk *IntConst) Val() (int, error) {
 	v, err := strconv.Atoi(tk.Label)
 	if err != nil {
 		return -1, err
