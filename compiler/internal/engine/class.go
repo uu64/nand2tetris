@@ -83,8 +83,8 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	}
 	class.Tokens = append(class.Tokens, className)
 	c.symtab.ClassName = className.Val()
-	className.Category = symtab.SkClass.String()
 	className.Kind = symtab.SkNone.String()
+	className.Category = symtab.SkClass.String()
 	className.Index = -1
 	className.IsDefined = true
 
@@ -209,8 +209,8 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineName)
 	c.symtab.SubroutineName = subroutineName.Val()
-	subroutineName.Category = symtab.SkSubroutine.String()
 	subroutineName.Kind = symtab.SkNone.String()
+	subroutineName.Category = symtab.SkSubroutine.String()
 	subroutineName.Index = -1
 	subroutineName.IsDefined = true
 
@@ -452,8 +452,8 @@ func (c *Compiler) compileName() (*token.Identifier, error) {
 
 func (c *Compiler) defineSymbol(id *token.Identifier, symName, typ string, kind symtab.SymbolKind) {
 	c.symtab.Define(symName, typ, kind)
-	id.Category = c.symtab.KindOf(symName).String()
 	id.Kind = c.symtab.KindOf(symName).String()
+	id.Category = c.symtab.KindOf(symName).String()
 	id.Index = c.symtab.IndexOf(symName)
 	id.IsDefined = true
 }
