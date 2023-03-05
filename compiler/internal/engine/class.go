@@ -149,10 +149,6 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 	}
 	classVarDec.Tokens = append(classVarDec.Tokens, typ)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// varName (',' varName)* ';'
 	for {
 		// varName
@@ -195,15 +191,15 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	// ('void' | type)
 	if kwd, err := c.tokenizer.Keyword(); err == nil && kwd.Val() == token.KwdVoid {
 		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
+		if err := c.tokenizer.Advance(); err != nil {
+			return nil, err
+		}
 	} else {
 		typ, err := c.compileType()
 		if err != nil {
 			return nil, fmt.Errorf("CompileSubroutineDec: %w", err)
 		}
 		subroutineDec.Tokens = append(subroutineDec.Tokens, typ)
-	}
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
 	}
 
 	// subroutineName
@@ -263,10 +259,6 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 				return fmt.Errorf("CompileParameterList: %w", err)
 			}
 			parameterList.Tokens = append(parameterList.Tokens, typ)
-
-			if err := c.tokenizer.Advance(); err != nil {
-				return err
-			}
 
 			// varName
 			varName, err := c.compileName()
@@ -370,10 +362,6 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 	}
 	varDec.Tokens = append(varDec.Tokens, typ)
 
-	if err := c.tokenizer.Advance(); err != nil {
-		return nil, err
-	}
-
 	// varName (',' varName)*
 	for {
 		// varName
@@ -409,11 +397,10 @@ func (c *Compiler) compileType() (token.Element, error) {
 		if kwd.Val() != token.KwdInt && kwd.Val() != token.KwdChar && kwd.Val() != token.KwdBoolean {
 			return nil, fmt.Errorf("compileType: invalid type %s", kwd.Label)
 		}
-		return kwd, nil
+		return kwd, c.tokenizer.Advance()
 	case token.TkIdentifier:
 		// ignore the error because it is already checked that the token type is IDENTIFIER
-		id, _ := c.tokenizer.Identifier()
-		return id, nil
+		return c.compileName()
 	default:
 		return nil, fmt.Errorf("compileType: type should start with KEYWORD or IDENTIFIER, got %d", tkType)
 	}

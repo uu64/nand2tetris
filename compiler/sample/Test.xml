@@ -125,9 +125,9 @@
       <symbol>,</symbol>
       <identifier>
         <value>BankAccount</value>
-        <category></category>
-        <kind></kind>
-        <idx>0</idx>
+        <category>class</category>
+        <kind>none</kind>
+        <idx>-1</idx>
         <defined>false</defined>
       </identifier>
       <identifier>
