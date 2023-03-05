@@ -9,17 +9,17 @@ import (
 var idRegex = regexp.MustCompile(`^(?P<val>[a-zA-Z_][0-9a-zA-Z_]*)$`)
 
 type Identifier struct {
-	XMLName xml.Name `xml:"identifier"`
-	// Label     string   `xml:",chardata"`
-	// Category  string   `xml:"-"`
-	// Kind      string   `xml:"-"`
-	// Index     int      `xml:"-"`
-	// IsDefined bool     `xml:"-"`
-	Label     string `xml:"value"`
-	Category  string `xml:"category"`
-	Kind      string `xml:"kind"`
-	Index     int    `xml:"idx"`
-	IsDefined bool   `xml:"defined"`
+	XMLName   xml.Name `xml:"identifier"`
+	Label     string   `xml:",chardata"`
+	Category  string   `xml:"-"`
+	Kind      string   `xml:"-"`
+	Index     int      `xml:"-"`
+	IsDefined bool     `xml:"-"`
+	// Label     string `xml:"value"`
+	// Category  string `xml:"category"`
+	// Kind      string `xml:"kind"`
+	// Index     int    `xml:"idx"`
+	// IsDefined bool   `xml:"defined"`
 }
 
 func (tk *Identifier) TokenType() TokenType {

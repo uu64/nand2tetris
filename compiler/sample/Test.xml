@@ -48,10 +48,10 @@
     <keyword>field</keyword>
     <identifier>
       <value>String</value>
-      <category></category>
-      <kind></kind>
-      <idx>0</idx>
-      <defined>false</defined>
+      <category>none</category>
+      <kind>none</kind>
+      <idx>-1</idx>
+      <defined>true</defined>
     </identifier>
     <identifier>
       <value>owner</value>
@@ -140,10 +140,10 @@
       <symbol>,</symbol>
       <identifier>
         <value>Date</value>
-        <category></category>
-        <kind></kind>
-        <idx>0</idx>
-        <defined>false</defined>
+        <category>none</category>
+        <kind>none</kind>
+        <idx>-1</idx>
+        <defined>true</defined>
       </identifier>
       <identifier>
         <value>when</value>
@@ -180,10 +180,10 @@
         <keyword>var</keyword>
         <identifier>
           <value>Date</value>
-          <category></category>
-          <kind></kind>
-          <idx>0</idx>
-          <defined>false</defined>
+          <category>none</category>
+          <kind>none</kind>
+          <idx>-1</idx>
+          <defined>true</defined>
         </identifier>
         <identifier>
           <value>due</value>
@@ -235,9 +235,9 @@
             <term>
               <identifier>
                 <value>commission</value>
-                <category></category>
-                <kind></kind>
-                <idx>0</idx>
+                <category>subroutine</category>
+                <kind>none</kind>
+                <idx>-1</idx>
                 <defined>false</defined>
               </identifier>
               <symbol>(</symbol>

@@ -410,29 +410,38 @@ func (c *Compiler) compileName() (*token.Identifier, error) {
 	id, err := c.tokenizer.Identifier()
 
 	name := id.Label
-	exists := true
-	if category := c.symtab.KindOf(name); category != symtab.SkNone {
-		id.Category = category.String()
-	} else if name == c.symtab.SubroutineName {
-		id.Category = "subroutine"
-	} else if name == c.symtab.ClassName {
-		id.Category = "class"
-	} else {
-		exists = false
-	}
-	fmt.Printf("id name: %s\n", name)
-	fmt.Printf("class name: %s\n", c.symtab.ClassName)
-	fmt.Printf("subroutine name: %s\n", c.symtab.SubroutineName)
-	fmt.Printf("class: %v\n", c.symtab.ClassTable())
-	fmt.Printf("subroutine: %v\n", c.symtab.SubroutineTable())
-	fmt.Printf("exists: %v\n", exists)
-	fmt.Println()
+	kind := c.symtab.KindOf(name)
 
-	if exists {
-		id.Kind = c.symtab.KindOf(name).String()
+	if kind != symtab.SkNone {
+		id.Kind = kind.String()
+		id.Category = kind.String()
 		id.Index = c.symtab.IndexOf(name)
 		id.IsDefined = false
+	} else {
+		if name == c.symtab.ClassName {
+			id.Kind = kind.String()
+			id.Category = symtab.SkClass.String()
+			id.Index = c.symtab.IndexOf(name)
+			id.IsDefined = false
+		} else if name == c.symtab.SubroutineName {
+			id.Kind = kind.String()
+			id.Category = symtab.SkSubroutine.String()
+			id.Index = c.symtab.IndexOf(name)
+			id.IsDefined = false
+		} else {
+			id.Kind = kind.String()
+			id.Category = kind.String()
+			id.Index = c.symtab.IndexOf(name)
+			id.IsDefined = true
+		}
 	}
+
+	// fmt.Printf("id name: %s\n", name)
+	// fmt.Printf("class name: %s\n", c.symtab.ClassName)
+	// fmt.Printf("subroutine name: %s\n", c.symtab.SubroutineName)
+	// fmt.Printf("class: %v\n", c.symtab.ClassTable())
+	// fmt.Printf("subroutine: %v\n", c.symtab.SubroutineTable())
+	// fmt.Println()
 
 	if err != nil {
 		return nil, fmt.Errorf("compileName: %w", err)

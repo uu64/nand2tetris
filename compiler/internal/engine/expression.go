@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 
+	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 )
 
@@ -259,11 +260,18 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 	}
 	switch s.Val() {
 	case token.SymLeftParenthesis:
+		name.IsDefined = false
+		name.Category = symtab.SkSubroutine.String()
+
 		// '(' expressionList ')'
 		if err := consumeExpressionList(); err != nil {
 			return nil, err
 		}
 	case token.SymDot:
+		name.IsDefined = false
+		name.Category = symtab.SkClass.String()
+
+		// NOTE: このappendいる？
 		tokens = append(tokens, s)
 
 		if err := c.tokenizer.Advance(); err != nil {
@@ -276,6 +284,8 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 			return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 		}
 		tokens = append(tokens, id)
+		id.IsDefined = false
+		name.Category = symtab.SkClass.String()
 
 		// '(' expressionList ')'
 		if err := consumeExpressionList(); err != nil {
