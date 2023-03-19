@@ -127,8 +127,7 @@ func (c *Compiler) CompileClass() (*Class, error) {
 	}
 	class.Tokens = append(class.Tokens, close)
 
-	// fmt.Println(c.symtab.ClassTable())
-
+	c.codewriter.Close()
 	return class, nil
 }
 

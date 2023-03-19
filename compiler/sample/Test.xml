@@ -1,99 +1,45 @@
 <class>
   <keyword>class</keyword>
-  <identifier>
-    <value>BankAccount</value>
-    <category>class</category>
-    <kind>none</kind>
-    <idx>-1</idx>
-    <defined>true</defined>
-  </identifier>
+  <identifier>BankAccount</identifier>
   <symbol>{</symbol>
   <classVarDec>
     <keyword>static</keyword>
     <keyword>int</keyword>
-    <identifier>
-      <value>nAccounts</value>
-      <category>static</category>
-      <kind>static</kind>
-      <idx>0</idx>
-      <defined>true</defined>
-    </identifier>
+    <identifier>nAccounts</identifier>
     <symbol>;</symbol>
   </classVarDec>
   <classVarDec>
     <keyword>static</keyword>
     <keyword>int</keyword>
-    <identifier>
-      <value>bankCommission</value>
-      <category>static</category>
-      <kind>static</kind>
-      <idx>1</idx>
-      <defined>true</defined>
-    </identifier>
+    <identifier>bankCommission</identifier>
     <symbol>;</symbol>
   </classVarDec>
   <classVarDec>
     <keyword>field</keyword>
     <keyword>int</keyword>
-    <identifier>
-      <value>id</value>
-      <category>field</category>
-      <kind>field</kind>
-      <idx>0</idx>
-      <defined>true</defined>
-    </identifier>
+    <identifier>id</identifier>
     <symbol>;</symbol>
   </classVarDec>
   <classVarDec>
     <keyword>field</keyword>
-    <identifier>
-      <value>String</value>
-      <category>none</category>
-      <kind>none</kind>
-      <idx>-1</idx>
-      <defined>true</defined>
-    </identifier>
-    <identifier>
-      <value>owner</value>
-      <category>field</category>
-      <kind>field</kind>
-      <idx>1</idx>
-      <defined>true</defined>
-    </identifier>
+    <identifier>String</identifier>
+    <identifier>owner</identifier>
     <symbol>;</symbol>
   </classVarDec>
   <classVarDec>
     <keyword>field</keyword>
     <keyword>int</keyword>
-    <identifier>
-      <value>balance</value>
-      <category>field</category>
-      <kind>field</kind>
-      <idx>2</idx>
-      <defined>true</defined>
-    </identifier>
+    <identifier>balance</identifier>
     <symbol>;</symbol>
   </classVarDec>
   <subroutineDec>
     <keyword>method</keyword>
     <keyword>int</keyword>
-    <identifier>
-      <value>commission</value>
-      <category>subroutine</category>
-      <kind>none</kind>
-      <idx>-1</idx>
-      <defined>true</defined>
-    </identifier>
+    <identifier>commission</identifier>
     <symbol>(</symbol>
     <parameterList>
       <keyword>int</keyword>
-      <identifier>
-        <value>x</value>
-        <category>argument</category>
-        <kind>argument</kind>
-        <idx>1</idx>
-        <defined>true</defined>
-      </identifier>
+      <identifier>x</identifier>
     </parameterList>
     <symbol>)</symbol>
     <subroutineBody>
@@ -105,53 +51,17 @@
   <subroutineDec>
     <keyword>method</keyword>
     <keyword>void</keyword>
-    <identifier>
-      <value>transfer</value>
-      <category>subroutine</category>
-      <kind>none</kind>
-      <idx>-1</idx>
-      <defined>true</defined>
-    </identifier>
+    <identifier>transfer</identifier>
     <symbol>(</symbol>
     <parameterList>
       <keyword>int</keyword>
-      <identifier>
-        <value>sum</value>
-        <category>argument</category>
-        <kind>argument</kind>
-        <idx>1</idx>
-        <defined>true</defined>
-      </identifier>
+      <identifier>sum</identifier>
       <symbol>,</symbol>
-      <identifier>
-        <value>BankAccount</value>
-        <category>class</category>
-        <kind>none</kind>
-        <idx>-1</idx>
-        <defined>false</defined>
-      </identifier>
-      <identifier>
-        <value>from</value>
-        <category>argument</category>
-        <kind>argument</kind>
-        <idx>2</idx>
-        <defined>true</defined>
-      </identifier>
+      <identifier>BankAccount</identifier>
+      <identifier>from</identifier>
       <symbol>,</symbol>
-      <identifier>
-        <value>Date</value>
-        <category>none</category>
-        <kind>none</kind>
-        <idx>-1</idx>
-        <defined>true</defined>
-      </identifier>
-      <identifier>
-        <value>when</value>
-        <category>argument</category>
-        <kind>argument</kind>
-        <idx>3</idx>
-        <defined>true</defined>
-      </identifier>
+      <identifier>Date</identifier>
+      <identifier>when</identifier>
     </parameterList>
     <symbol>)</symbol>
     <subroutineBody>
@@ -159,98 +69,44 @@
       <varDec>
         <keyword>var</keyword>
         <keyword>int</keyword>
-        <identifier>
-          <value>i</value>
-          <category>var</category>
-          <kind>var</kind>
-          <idx>0</idx>
-          <defined>true</defined>
-        </identifier>
+        <identifier>i</identifier>
         <symbol>,</symbol>
-        <identifier>
-          <value>j</value>
-          <category>var</category>
-          <kind>var</kind>
-          <idx>1</idx>
-          <defined>true</defined>
-        </identifier>
+        <identifier>j</identifier>
         <symbol>;</symbol>
       </varDec>
       <varDec>
         <keyword>var</keyword>
-        <identifier>
-          <value>Date</value>
-          <category>none</category>
-          <kind>none</kind>
-          <idx>-1</idx>
-          <defined>true</defined>
-        </identifier>
-        <identifier>
-          <value>due</value>
-          <category>var</category>
-          <kind>var</kind>
-          <idx>2</idx>
-          <defined>true</defined>
-        </identifier>
+        <identifier>Date</identifier>
+        <identifier>due</identifier>
         <symbol>;</symbol>
       </varDec>
       <statements>
         <letStatement>
           <keyword>let</keyword>
-          <identifier>
-            <value>balance</value>
-            <category>field</category>
-            <kind>field</kind>
-            <idx>2</idx>
-            <defined>false</defined>
-          </identifier>
+          <identifier>balance</identifier>
           <symbol>=</symbol>
           <expression>
             <term>
               <symbol>(</symbol>
               <expression>
                 <term>
-                  <identifier>
-                    <value>balance</value>
-                    <category>field</category>
-                    <kind>field</kind>
-                    <idx>2</idx>
-                    <defined>false</defined>
-                  </identifier>
+                  <identifier>balance</identifier>
                 </term>
                 <symbol>+</symbol>
                 <term>
-                  <identifier>
-                    <value>sum</value>
-                    <category>argument</category>
-                    <kind>argument</kind>
-                    <idx>1</idx>
-                    <defined>false</defined>
-                  </identifier>
+                  <identifier>sum</identifier>
                 </term>
               </expression>
               <symbol>)</symbol>
             </term>
             <symbol>-</symbol>
             <term>
-              <identifier>
-                <value>commission</value>
-                <category>subroutine</category>
-                <kind>none</kind>
-                <idx>-1</idx>
-                <defined>false</defined>
-              </identifier>
+              <identifier>commission</identifier>
               <symbol>(</symbol>
               <expressionList>
                 <expression>
                   <term>
-                    <identifier>
-                      <value>sum</value>
-                      <category>argument</category>
-                      <kind>argument</kind>
-                      <idx>1</idx>
-                      <defined>false</defined>
-                    </identifier>
+                    <identifier>sum</identifier>
                   </term>
                   <symbol>*</symbol>
                   <term>
