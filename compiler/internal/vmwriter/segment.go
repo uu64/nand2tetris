@@ -1,4 +1,4 @@
-package codewriter
+package vmwriter
 
 //go:generate go run golang.org/x/tools/cmd/stringer -type=SegmentType -linecomment
 type SegmentType int

@@ -3,15 +3,15 @@ package engine
 import (
 	"fmt"
 
-	"github.com/uu64/nand2tetris/compiler/internal/codewriter"
 	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
+	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
 type Compiler struct {
 	tokenizer  *token.Tokenizer
 	symtab     *symtab.Symtab
-	codewriter *codewriter.CodeWriter
+	codewriter *vmwriter.VMWriter
 }
 
 func New(t *token.Tokenizer) (*Compiler, error) {
@@ -23,7 +23,7 @@ func New(t *token.Tokenizer) (*Compiler, error) {
 		tokenizer: t,
 		symtab:    symtab.New(),
 		// TODO: impl
-		codewriter: codewriter.New(nil),
+		codewriter: vmwriter.New(nil),
 	}, nil
 }
 
