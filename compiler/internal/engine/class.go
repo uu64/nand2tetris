@@ -190,9 +190,9 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 
 	// ('void' | type)
-	// isVoid := false
+	isVoid := false
 	if kwd, err := c.tokenizer.Keyword(); err == nil && kwd.Val() == token.KwdVoid {
-		// isVoid = true
+		isVoid = true
 		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 		if err := c.tokenizer.Advance(); err != nil {
 			return nil, err
@@ -248,6 +248,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineBody)
 
+	c.writeReturn(isVoid)
 	return subroutineDec, nil
 }
 

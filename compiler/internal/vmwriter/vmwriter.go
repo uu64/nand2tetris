@@ -82,7 +82,7 @@ func (vw *VMWriter) WriteFunction(name string, nLocals int) error {
 }
 
 func (vw *VMWriter) WriteReturn() error {
-	_, err := vw.writer.WriteString("return")
+	_, err := vw.writer.WriteString("return\n")
 	return err
 }
 

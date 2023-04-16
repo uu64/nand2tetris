@@ -6,7 +6,6 @@ import (
 
 	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
-	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
 type Expression struct {
@@ -107,7 +106,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		c.codewriter.WritePush(vmwriter.Const, n)
+		c.writePushIntConst(n)
 
 		return &term, c.tokenizer.Advance()
 
@@ -293,6 +292,8 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		if err := consumeExpressionList(); err != nil {
 			return nil, err
 		}
+
+		c.writeCall(name.Label)
 	case token.SymDot:
 		name.IsDefined = false
 		name.Category = symtab.SkClass.String()
@@ -317,6 +318,8 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		if err := consumeExpressionList(); err != nil {
 			return nil, err
 		}
+
+		c.writeCall(fmt.Sprintf("%s.%s", name.Label, id.Label))
 	default:
 		return nil, fmt.Errorf("compileSubroutineCall: '(' or '.' is expected, got %s", s)
 	}

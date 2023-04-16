@@ -312,6 +312,7 @@ func (c *Compiler) compileDoStatement() (*DoStatement, error) {
 		return nil, fmt.Errorf("compileDoStatement: %w", err)
 	}
 	statement.Tokens = append(statement.Tokens, call...)
+	c.discardReturn()
 
 	// ';'
 	if end, err := c.consumeSymbol(token.SymSemiColon); err != nil {

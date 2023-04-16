@@ -36,23 +36,21 @@ func (c *Compiler) writeOp(op Op) error {
 	}
 }
 
-func (c *Compiler) writeExpression(exp *Expression) error {
-	for _, e := range exp.Tokens {
-		fmt.Println(e.ElementType().String())
-	}
-	fmt.Println()
-	return nil
+func (c *Compiler) writeCall(name string) {
+	c.codewriter.WriteCall(name, 1)
 }
 
-func (c *Compiler) writeSubroutine(el *SubroutineDec) error {
-	for _, tk := range el.Tokens {
-		switch tk.ElementType() {
-		case tokenizer.ElToken:
-			tk := tk.(tokenizer.Token)
-			fmt.Println(tk.TokenType().String())
-		default:
-			fmt.Println(tk.ElementType())
-		}
+func (c *Compiler) writePushIntConst(n int) {
+	c.codewriter.WritePush(vmwriter.Const, n)
+}
+
+func (c *Compiler) writeReturn(isVoid bool) {
+	if isVoid {
+		c.codewriter.WritePush(vmwriter.Const, 0)
 	}
-	return nil
+	c.codewriter.WriteReturn()
+}
+
+func (c *Compiler) discardReturn() {
+	c.codewriter.WritePop(vmwriter.Temp, 0)
 }
