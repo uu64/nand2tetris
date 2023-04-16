@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
@@ -23,7 +24,8 @@ func New(t *token.Tokenizer) (*Compiler, error) {
 		tokenizer: t,
 		symtab:    symtab.New(),
 		// TODO: impl
-		codewriter: vmwriter.New(nil),
+		codewriter: vmwriter.New(os.Stdout),
+		// codewriter: vmwriter.New(io.Discard),
 	}, nil
 }
 

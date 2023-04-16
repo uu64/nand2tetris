@@ -6,6 +6,7 @@ import (
 
 	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
+	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
 type Expression struct {
@@ -35,8 +36,21 @@ func (el Term) ElementType() token.ElementType {
 	return token.ElTerm
 }
 
+type Op token.Symbol
+
+func (el Op) ElementType() token.ElementType {
+	return token.ElOp
+}
+
+type UnaryOp token.Symbol
+
+func (el UnaryOp) ElementType() token.ElementType {
+	return token.ElUnaryOp
+}
+
 func (c *Compiler) CompileExpression() (*Expression, error) {
 	expression := Expression{Tokens: []token.Element{}}
+	ops := []Op{}
 
 	// term (op term)*
 	for {
@@ -63,10 +77,15 @@ func (c *Compiler) CompileExpression() (*Expression, error) {
 			v == token.SymEqual) {
 			break
 		}
-		expression.Tokens = append(expression.Tokens, op)
+		expression.Tokens = append(expression.Tokens, Op(*op))
+		ops = append(ops, Op(*op))
 		if err := c.tokenizer.Advance(); err != nil {
 			return nil, fmt.Errorf("compileExpression: %w", err)
 		}
+	}
+
+	for i := len(ops) - 1; i >= 0; i-- {
+		c.writeOp(ops[i])
 	}
 
 	return &expression, nil
@@ -83,6 +102,13 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		// ignore the error because it is already checked that the token type is INT_CONST
 		v, _ := c.tokenizer.IntVal()
 		term.Tokens = append(term.Tokens, v)
+
+		n, err := v.Val()
+		if err != nil {
+			return nil, err
+		}
+		c.codewriter.WritePush(vmwriter.Const, n)
+
 		return &term, c.tokenizer.Advance()
 
 	// stringConstant
@@ -161,7 +187,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 
 		// unaryOp term
 		case token.SymMinus, token.SymTilde:
-			term.Tokens = append(term.Tokens, s)
+			term.Tokens = append(term.Tokens, UnaryOp(*s))
 			if err := c.tokenizer.Advance(); err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
 			}

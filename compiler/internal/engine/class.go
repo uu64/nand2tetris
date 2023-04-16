@@ -38,6 +38,7 @@ func (el SubroutineDec) ElementType() token.ElementType {
 type ParameterList struct {
 	XMLName xml.Name `xml:"parameterList"`
 	Tokens  []token.Element
+	Len     int `xml:"-"`
 }
 
 func (el ParameterList) ElementType() token.ElementType {
@@ -181,14 +182,17 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	c.defineSymbol(&token.Identifier{Label: "this"}, "this", c.symtab.ClassName, symtab.SkArg)
 
 	// ('constructor' | 'function' | 'method')
-	if kwd, err := c.consumeKeyword(token.KwdConstructor, token.KwdFunction, token.KwdMethod); err != nil {
+	kwd, err := c.consumeKeyword(token.KwdConstructor, token.KwdFunction, token.KwdMethod)
+	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: classVarDec should start with CONSTRUCTOR or FUNCTION or METHOD, got %v", c.tokenizer.Current)
 	} else {
 		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 	}
 
 	// ('void' | type)
+	// isVoid := false
 	if kwd, err := c.tokenizer.Keyword(); err == nil && kwd.Val() == token.KwdVoid {
+		// isVoid = true
 		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 		if err := c.tokenizer.Advance(); err != nil {
 			return nil, err
@@ -235,6 +239,8 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, close)
 
+	c.writeFunction(kwd, subroutineName, paramList.Len)
+
 	// subroutineBody
 	subroutineBody, err := c.CompileSubroutineBody()
 	if err != nil {
@@ -242,12 +248,11 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineBody)
 
-	// fmt.Println(c.symtab.SubroutineTable())
 	return subroutineDec, nil
 }
 
 func (c *Compiler) CompileParameterList() (*ParameterList, error) {
-	parameterList := &ParameterList{Tokens: []token.Element{}}
+	parameterList := &ParameterList{Tokens: []token.Element{}, Len: 0}
 
 	// ((type varName) (',' type varName)*)
 	consumeParameters := func() error {
@@ -266,6 +271,8 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 			}
 			parameterList.Tokens = append(parameterList.Tokens, varName)
 			c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.SkArg)
+
+			parameterList.Len += 1
 
 			// check additional parameter
 			s, err := c.tokenizer.Symbol()
