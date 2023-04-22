@@ -36,8 +36,8 @@ func (c *Compiler) writeOp(op Op) error {
 	}
 }
 
-func (c *Compiler) writeCall(name string) {
-	c.codewriter.WriteCall(name, 1)
+func (c *Compiler) writeCall(name string, nArgs int) {
+	c.codewriter.WriteCall(name, nArgs)
 }
 
 func (c *Compiler) writePushIntConst(n int) {

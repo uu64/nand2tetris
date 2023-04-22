@@ -20,6 +20,7 @@ func (el Expression) ElementType() token.ElementType {
 type ExpressionList struct {
 	XMLName xml.Name `xml:"expressionList"`
 	Tokens  []token.Element
+	Len     int `xml:"-"`
 }
 
 func (el ExpressionList) ElementType() token.ElementType {
@@ -252,10 +253,10 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 	}
 	tokens = append(tokens, name)
 
-	consumeExpressionList := func() error {
+	consumeExpressionList := func() (*ExpressionList, error) {
 		// '('
 		if open, err := c.consumeSymbol(token.SymLeftParenthesis); err != nil {
-			return fmt.Errorf("CompileSubroutineCall: symbol '(' is missing, got %v", c.tokenizer.Current)
+			return nil, fmt.Errorf("CompileSubroutineCall: symbol '(' is missing, got %v", c.tokenizer.Current)
 		} else {
 			tokens = append(tokens, open)
 		}
@@ -264,18 +265,18 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		// NOTE: You don't need to call Advance() because Advance() is already called inside CompileExpressionList()
 		list, err := c.CompileExpressionList()
 		if err != nil {
-			return fmt.Errorf("compileSubroutineCall: %w", err)
+			return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 		}
 		tokens = append(tokens, list)
 
 		// ')'
 		if close, err := c.consumeSymbol(token.SymRightParenthesis); err != nil {
-			return fmt.Errorf("CompileSubroutineCall: symbol ')' is missing, got %v", c.tokenizer.Current)
+			return nil, fmt.Errorf("CompileSubroutineCall: symbol ')' is missing, got %v", c.tokenizer.Current)
 		} else {
 			tokens = append(tokens, close)
 		}
 
-		return nil
+		return list, nil
 	}
 
 	// '(' or '.'
@@ -289,11 +290,12 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		name.Category = symtab.SkSubroutine.String()
 
 		// '(' expressionList ')'
-		if err := consumeExpressionList(); err != nil {
+		list, err := consumeExpressionList()
+		if err != nil {
 			return nil, err
 		}
 
-		c.writeCall(name.Label)
+		c.writeCall(name.Label, list.Len)
 	case token.SymDot:
 		name.IsDefined = false
 		name.Category = symtab.SkClass.String()
@@ -315,11 +317,12 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		name.Category = symtab.SkClass.String()
 
 		// '(' expressionList ')'
-		if err := consumeExpressionList(); err != nil {
+		list, err := consumeExpressionList()
+		if err != nil {
 			return nil, err
 		}
 
-		c.writeCall(fmt.Sprintf("%s.%s", name.Label, id.Label))
+		c.writeCall(fmt.Sprintf("%s.%s", name.Label, id.Label), list.Len)
 	default:
 		return nil, fmt.Errorf("compileSubroutineCall: '(' or '.' is expected, got %s", s)
 	}
@@ -328,7 +331,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 }
 
 func (c *Compiler) CompileExpressionList() (*ExpressionList, error) {
-	expressionList := &ExpressionList{Tokens: []token.Element{}}
+	expressionList := &ExpressionList{Tokens: []token.Element{}, Len: 0}
 
 	// Return empty ParameterList when current token is ')'
 	if s, err := c.tokenizer.Symbol(); err == nil && s.Val() == token.SymRightParenthesis {
@@ -343,6 +346,7 @@ func (c *Compiler) CompileExpressionList() (*ExpressionList, error) {
 			return nil, fmt.Errorf("CompileParameterList: %w", err)
 		}
 		expressionList.Tokens = append(expressionList.Tokens, expression)
+		expressionList.Len += 1
 
 		// check additional parameter
 		if s, err := c.consumeSymbol(token.SymComma); err != nil {
