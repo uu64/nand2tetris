@@ -1,11 +1,10 @@
 #!/bin/bash -eu
 
 check_compiler() {
-    echo "../projects/10/${1}/${2}.jack"
-    test -e "../projects/10/${1}/${2}.xml" && rm "../projects/10/${1}/${2}.xml"
-    ./JackCompiler "../projects/10/${1}/${2}.jack"
-    # replace: <tag>{new line}{indent}</tag> -> <tag></tag>
-    diff -uw  <(gsed -z -E "s#<([a-zA-Z]+)>\r?\n\s+</([a-zA-Z]+)>#<\1></\2>#g" "./cmd/compiler/data/${1}/${2}.xml") "../projects/10/${1}/${2}.xml"
+    echo "../projects/11/${1}/${2}.jack"
+    test -e "./cmd/compiler/data/11/${1}/${2}.vm" && rm "./cmd/compiler/data/11/${1}/${2}.vm"
+    ./JackCompiler "./cmd/compiler/data/11/${1}/${2}.jack"
+    diff -uw  "../projects/11/${1}/${2}.vm" "./cmd/compiler/data/11/${1}/${2}.vm" 
     echo "pass"
 }
 
@@ -18,9 +17,6 @@ compile module
 ####################
 
 EOF
-
-test -e ./JackTokenizer && rm ./JackTokenizer
-go build -o ./JackTokenizer ./cmd/tokenizer
 
 test -e ./JackCompiler && rm ./JackCompiler
 go build -o ./JackCompiler ./cmd/compiler
@@ -35,14 +31,8 @@ test JackCompiler
 
 EOF
 
-check_compiler "ExpressionLessSquare" "Main"
-check_compiler "ExpressionLessSquare" "Square"
-check_compiler "ExpressionLessSquare" "SquareGame"
+check_compiler "Seven" "Main"
 
-check_compiler "ArrayTest" "Main"
-
-check_compiler "Square" "Main"
-check_compiler "Square" "Square"
-check_compiler "Square" "SquareGame"
+check_compiler "ConvertToBin" "Main"
 
 echo "finish."
