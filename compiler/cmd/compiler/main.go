@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	compiler "github.com/uu64/nand2tetris/compiler/internal/engine"
+	"github.com/uu64/nand2tetris/compiler/internal/engine"
 	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 )
 
@@ -46,18 +46,18 @@ func (cmd *Cmd) write(b []byte) error {
 	return nil
 }
 
-func (cmd *Cmd) encodeXML(class *compiler.Class) ([]byte, error) {
+func (cmd *Cmd) encodeXML(class *engine.Class) ([]byte, error) {
 	return xml.MarshalIndent(class, "", "  ")
 }
 
-func (cmd *Cmd) compile() (*compiler.Class, error) {
+func (cmd *Cmd) compile() (*engine.Class, error) {
 	f, err := os.Open(cmd.source)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	compiler, err := compiler.New(tokenizer.New(f))
+	compiler, err := engine.New(tokenizer.New(f))
 	if err != nil {
 		return nil, err
 	}

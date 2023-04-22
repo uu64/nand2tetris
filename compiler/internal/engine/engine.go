@@ -5,17 +5,17 @@ import (
 	"os"
 
 	"github.com/uu64/nand2tetris/compiler/internal/symtab"
-	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
+	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
 type Compiler struct {
-	tokenizer  *token.Tokenizer
+	tokenizer  *tokenizer.Tokenizer
 	symtab     *symtab.Symtab
 	codewriter *vmwriter.VMWriter
 }
 
-func New(t *token.Tokenizer) (*Compiler, error) {
+func New(t *tokenizer.Tokenizer) (*Compiler, error) {
 	if err := t.Advance(); err != nil {
 		return nil, fmt.Errorf("CompileClass: %w", err)
 	}
@@ -29,7 +29,7 @@ func New(t *token.Tokenizer) (*Compiler, error) {
 	}, nil
 }
 
-func (c *Compiler) consumeKeyword(expected ...token.KeywordType) (*token.Keyword, error) {
+func (c *Compiler) consumeKeyword(expected ...tokenizer.KeywordType) (*tokenizer.Keyword, error) {
 	kwd, err := c.tokenizer.Keyword()
 	if err != nil {
 		return nil, fmt.Errorf("consumeKeyword: %w", err)
@@ -48,7 +48,7 @@ func (c *Compiler) consumeKeyword(expected ...token.KeywordType) (*token.Keyword
 	return nil, fmt.Errorf("consumeKeyword: expected %v, got %v", expected, kwd)
 }
 
-func (c *Compiler) consumeSymbol(expected ...rune) (*token.Symbol, error) {
+func (c *Compiler) consumeSymbol(expected ...rune) (*tokenizer.Symbol, error) {
 	symbol, err := c.tokenizer.Symbol()
 	if err != nil {
 		return nil, fmt.Errorf("consumeSymbol: %w", err)

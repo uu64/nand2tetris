@@ -5,51 +5,51 @@ import (
 	"fmt"
 
 	"github.com/uu64/nand2tetris/compiler/internal/symtab"
-	token "github.com/uu64/nand2tetris/compiler/internal/tokenizer"
+	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 )
 
 type Expression struct {
 	XMLName xml.Name `xml:"expression"`
-	Tokens  []token.Element
+	Tokens  []tokenizer.Element
 }
 
-func (el Expression) ElementType() token.ElementType {
-	return token.ElExpression
+func (el Expression) ElementType() tokenizer.ElementType {
+	return tokenizer.ElExpression
 }
 
 type ExpressionList struct {
 	XMLName xml.Name `xml:"expressionList"`
-	Tokens  []token.Element
+	Tokens  []tokenizer.Element
 	Len     int `xml:"-"`
 }
 
-func (el ExpressionList) ElementType() token.ElementType {
-	return token.ElExpressionList
+func (el ExpressionList) ElementType() tokenizer.ElementType {
+	return tokenizer.ElExpressionList
 }
 
 type Term struct {
 	XMLName xml.Name `xml:"term"`
-	Tokens  []token.Element
+	Tokens  []tokenizer.Element
 }
 
-func (el Term) ElementType() token.ElementType {
-	return token.ElTerm
+func (el Term) ElementType() tokenizer.ElementType {
+	return tokenizer.ElTerm
 }
 
-type Op token.Symbol
+type Op tokenizer.Symbol
 
-func (el Op) ElementType() token.ElementType {
-	return token.ElOp
+func (el Op) ElementType() tokenizer.ElementType {
+	return tokenizer.ElOp
 }
 
-type UnaryOp token.Symbol
+type UnaryOp tokenizer.Symbol
 
-func (el UnaryOp) ElementType() token.ElementType {
-	return token.ElUnaryOp
+func (el UnaryOp) ElementType() tokenizer.ElementType {
+	return tokenizer.ElUnaryOp
 }
 
 func (c *Compiler) CompileExpression() (*Expression, error) {
-	expression := Expression{Tokens: []token.Element{}}
+	expression := Expression{Tokens: []tokenizer.Element{}}
 	ops := []Op{}
 
 	// term (op term)*
@@ -66,15 +66,15 @@ func (c *Compiler) CompileExpression() (*Expression, error) {
 			break
 		}
 		v := op.Val()
-		if !(v == token.SymPlus ||
-			v == token.SymMinus ||
-			v == token.SymAsterisk ||
-			v == token.SymSlash ||
-			v == token.SymAmpersand ||
-			v == token.SymBar ||
-			v == token.SymLessThan ||
-			v == token.SymGreaterThan ||
-			v == token.SymEqual) {
+		if !(v == tokenizer.SymPlus ||
+			v == tokenizer.SymMinus ||
+			v == tokenizer.SymAsterisk ||
+			v == tokenizer.SymSlash ||
+			v == tokenizer.SymAmpersand ||
+			v == tokenizer.SymBar ||
+			v == tokenizer.SymLessThan ||
+			v == tokenizer.SymGreaterThan ||
+			v == tokenizer.SymEqual) {
 			break
 		}
 		expression.Tokens = append(expression.Tokens, Op(*op))
@@ -92,13 +92,13 @@ func (c *Compiler) CompileExpression() (*Expression, error) {
 }
 
 func (c *Compiler) CompileTerm() (*Term, error) {
-	term := Term{Tokens: []token.Element{}}
+	term := Term{Tokens: []tokenizer.Element{}}
 
 	tkType := c.tokenizer.TokenType()
 
 	switch tkType {
 	// integerConstant
-	case token.TkIntConst:
+	case tokenizer.TkIntConst:
 		// ignore the error because it is already checked that the token type is INT_CONST
 		v, _ := c.tokenizer.IntVal()
 		term.Tokens = append(term.Tokens, v)
@@ -112,15 +112,15 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		return &term, c.tokenizer.Advance()
 
 	// stringConstant
-	case token.TkStringConst:
+	case tokenizer.TkStringConst:
 		// ignore the error because it is already checked that the token type is STRING_CONST
 		v, _ := c.tokenizer.StringVal()
 		term.Tokens = append(term.Tokens, v)
 		return &term, c.tokenizer.Advance()
 
 	// keywordConstant
-	case token.TkKeyword:
-		kwd, err := c.consumeKeyword(token.KwdTrue, token.KwdFalse, token.KwdNull, token.KwdThis)
+	case tokenizer.TkKeyword:
+		kwd, err := c.consumeKeyword(tokenizer.KwdTrue, tokenizer.KwdFalse, tokenizer.KwdNull, tokenizer.KwdThis)
 		if err != nil {
 			return nil, fmt.Errorf("CompileTerm: invalid keyword %s", kwd)
 		}
@@ -128,7 +128,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 
 	// varName | varName '[' expression ']' | subroutineCall
 	// subroutineCall: subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
-	case token.TkIdentifier:
+	case tokenizer.TkIdentifier:
 		next, err := c.tokenizer.CheckNextRune()
 		if err != nil {
 			return nil, fmt.Errorf("compileTerm: %w", err)
@@ -136,7 +136,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 
 		switch next {
 		// varName '[' expression ']'
-		case token.SymLeftSquareBracket:
+		case tokenizer.SymLeftSquareBracket:
 			tokens, err := c.CompileArrayDec()
 			if err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
@@ -144,7 +144,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 			term.Tokens = append(term.Tokens, tokens...)
 
 		// subroutineCall
-		case token.SymLeftParenthesis, token.SymDot:
+		case tokenizer.SymLeftParenthesis, tokenizer.SymDot:
 			tokens, err := c.CompileSubroutineCall()
 			if err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
@@ -161,13 +161,13 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		}
 
 	// '(' expression ')' | unaryOp term
-	case token.TkSymbol:
+	case tokenizer.TkSymbol:
 		// ignore the error because it is already checked that the token type is SYMBOL
 		s, _ := c.tokenizer.Symbol()
 
 		switch s.Val() {
 		// '(' expression ')'
-		case token.SymLeftParenthesis:
+		case tokenizer.SymLeftParenthesis:
 			term.Tokens = append(term.Tokens, s)
 			if err := c.tokenizer.Advance(); err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
@@ -179,14 +179,14 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 			}
 			term.Tokens = append(term.Tokens, expression)
 
-			close, err := c.consumeSymbol(token.SymRightParenthesis)
+			close, err := c.consumeSymbol(tokenizer.SymRightParenthesis)
 			if err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
 			}
 			term.Tokens = append(term.Tokens, close)
 
 		// unaryOp term
-		case token.SymMinus, token.SymTilde:
+		case tokenizer.SymMinus, tokenizer.SymTilde:
 			term.Tokens = append(term.Tokens, UnaryOp(*s))
 			if err := c.tokenizer.Advance(); err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
@@ -209,8 +209,8 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 	return &term, nil
 }
 
-func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
-	tokens := []token.Element{}
+func (c *Compiler) CompileArrayDec() ([]tokenizer.Element, error) {
+	tokens := []tokenizer.Element{}
 
 	// varName
 	name, err := c.compileName()
@@ -220,7 +220,7 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	tokens = append(tokens, name)
 
 	// '['
-	if open, err := c.consumeSymbol(token.SymLeftSquareBracket); err != nil {
+	if open, err := c.consumeSymbol(tokenizer.SymLeftSquareBracket); err != nil {
 		return nil, fmt.Errorf("CompileArrayDec: symbol '[' is missing, got %v", c.tokenizer.Current)
 	} else {
 		tokens = append(tokens, open)
@@ -234,7 +234,7 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	tokens = append(tokens, expression)
 
 	// ']'
-	if close, err := c.consumeSymbol(token.SymRightSquareBracket); err != nil {
+	if close, err := c.consumeSymbol(tokenizer.SymRightSquareBracket); err != nil {
 		return nil, fmt.Errorf("CompileArrayDec: symbol ']' is missing, got %v", c.tokenizer.Current)
 	} else {
 		tokens = append(tokens, close)
@@ -243,8 +243,8 @@ func (c *Compiler) CompileArrayDec() ([]token.Element, error) {
 	return tokens, nil
 }
 
-func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
-	tokens := []token.Element{}
+func (c *Compiler) CompileSubroutineCall() ([]tokenizer.Element, error) {
+	tokens := []tokenizer.Element{}
 
 	// subroutineName or (className | varName)
 	name, err := c.compileName()
@@ -255,7 +255,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 
 	consumeExpressionList := func() (*ExpressionList, error) {
 		// '('
-		if open, err := c.consumeSymbol(token.SymLeftParenthesis); err != nil {
+		if open, err := c.consumeSymbol(tokenizer.SymLeftParenthesis); err != nil {
 			return nil, fmt.Errorf("CompileSubroutineCall: symbol '(' is missing, got %v", c.tokenizer.Current)
 		} else {
 			tokens = append(tokens, open)
@@ -270,7 +270,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		tokens = append(tokens, list)
 
 		// ')'
-		if close, err := c.consumeSymbol(token.SymRightParenthesis); err != nil {
+		if close, err := c.consumeSymbol(tokenizer.SymRightParenthesis); err != nil {
 			return nil, fmt.Errorf("CompileSubroutineCall: symbol ')' is missing, got %v", c.tokenizer.Current)
 		} else {
 			tokens = append(tokens, close)
@@ -285,7 +285,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 	}
 	switch s.Val() {
-	case token.SymLeftParenthesis:
+	case tokenizer.SymLeftParenthesis:
 		name.IsDefined = false
 		name.Category = symtab.SkSubroutine.String()
 
@@ -296,7 +296,7 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 		}
 
 		c.writeCall(name.Label, list.Len)
-	case token.SymDot:
+	case tokenizer.SymDot:
 		name.IsDefined = false
 		name.Category = symtab.SkClass.String()
 
@@ -331,10 +331,10 @@ func (c *Compiler) CompileSubroutineCall() ([]token.Element, error) {
 }
 
 func (c *Compiler) CompileExpressionList() (*ExpressionList, error) {
-	expressionList := &ExpressionList{Tokens: []token.Element{}, Len: 0}
+	expressionList := &ExpressionList{Tokens: []tokenizer.Element{}, Len: 0}
 
 	// Return empty ParameterList when current token is ')'
-	if s, err := c.tokenizer.Symbol(); err == nil && s.Val() == token.SymRightParenthesis {
+	if s, err := c.tokenizer.Symbol(); err == nil && s.Val() == tokenizer.SymRightParenthesis {
 		return expressionList, nil
 	}
 
@@ -349,7 +349,7 @@ func (c *Compiler) CompileExpressionList() (*ExpressionList, error) {
 		expressionList.Len += 1
 
 		// check additional parameter
-		if s, err := c.consumeSymbol(token.SymComma); err != nil {
+		if s, err := c.consumeSymbol(tokenizer.SymComma); err != nil {
 			break
 		} else {
 			expressionList.Tokens = append(expressionList.Tokens, s)
