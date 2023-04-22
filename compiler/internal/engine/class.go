@@ -38,7 +38,6 @@ func (el SubroutineDec) ElementType() tokenizer.ElementType {
 type ParameterList struct {
 	XMLName xml.Name `xml:"parameterList"`
 	Tokens  []tokenizer.Element
-	Len     int `xml:"-"`
 }
 
 func (el ParameterList) ElementType() tokenizer.ElementType {
@@ -57,7 +56,6 @@ func (el SubroutineBody) ElementType() tokenizer.ElementType {
 type VarDec struct {
 	XMLName xml.Name `xml:"varDec"`
 	Tokens  []tokenizer.Element
-	Len     int `xml:"-"`
 }
 
 func (el VarDec) ElementType() tokenizer.ElementType {
@@ -254,7 +252,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 }
 
 func (c *Compiler) CompileParameterList() (*ParameterList, error) {
-	parameterList := &ParameterList{Tokens: []tokenizer.Element{}, Len: 0}
+	parameterList := &ParameterList{Tokens: []tokenizer.Element{}}
 
 	// ((type varName) (',' type varName)*)
 	consumeParameters := func() error {
@@ -273,8 +271,6 @@ func (c *Compiler) CompileParameterList() (*ParameterList, error) {
 			}
 			parameterList.Tokens = append(parameterList.Tokens, varName)
 			c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.SkArg)
-
-			parameterList.Len += 1
 
 			// check additional parameter
 			s, err := c.tokenizer.Symbol()
@@ -324,7 +320,6 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	subroutineBody.Tokens = append(subroutineBody.Tokens, open)
 
 	// varDec*
-	nLocals := 0
 	for {
 		if kwd, err := c.tokenizer.Keyword(); !(err == nil && kwd.Val() == tokenizer.KwdVar) {
 			break
@@ -334,11 +329,9 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 			return nil, fmt.Errorf("CompileSubroutineBody: %w", err)
 		}
 		subroutineBody.Tokens = append(subroutineBody.Tokens, varDec)
-		nLocals += varDec.Len
 	}
 
-	// TODO: 呼び出し場所違う
-	c.writeFunction(c.ctx.SubroutineKwd.Label, c.ctx.SubroutineName, nLocals)
+	c.writeFunction(c.ctx.SubroutineKwd.Label, c.ctx.SubroutineName, c.symtab.VarCount(symtab.SkVar))
 
 	// statements
 	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
@@ -359,7 +352,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 }
 
 func (c *Compiler) CompileVarDec() (*VarDec, error) {
-	varDec := &VarDec{Tokens: []tokenizer.Element{}, Len: 0}
+	varDec := &VarDec{Tokens: []tokenizer.Element{}}
 
 	// 'var'
 	kwd, err := c.consumeKeyword(tokenizer.KwdVar)
@@ -384,7 +377,6 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 		}
 		varDec.Tokens = append(varDec.Tokens, varName)
 		c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.SkVar)
-		varDec.Len += 1
 
 		// check additional varName
 		s, err := c.consumeSymbol(tokenizer.SymComma, tokenizer.SymSemiColon)
