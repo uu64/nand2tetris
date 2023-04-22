@@ -2,7 +2,7 @@ package engine
 
 import (
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
@@ -15,17 +15,15 @@ type Compiler struct {
 	codewriter *vmwriter.VMWriter
 }
 
-func New(t *tokenizer.Tokenizer) (*Compiler, error) {
+func New(t *tokenizer.Tokenizer, f io.Writer) (*Compiler, error) {
 	if err := t.Advance(); err != nil {
 		return nil, fmt.Errorf("CompileClass: %w", err)
 	}
 
 	return &Compiler{
-		tokenizer: t,
-		symtab:    symtab.New(),
-		// TODO: impl
-		codewriter: vmwriter.New(os.Stdout),
-		// codewriter: vmwriter.New(io.Discard),
+		tokenizer:  t,
+		symtab:     symtab.New(),
+		codewriter: vmwriter.New(f),
 	}, nil
 }
 

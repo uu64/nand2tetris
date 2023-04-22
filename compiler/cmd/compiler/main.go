@@ -20,12 +20,13 @@ const (
 )
 
 type Cmd struct {
-	source string
-	output string
+	source    string
+	xmlOutput string
+	vmOutput  string
 }
 
 func (cmd *Cmd) write(b []byte) error {
-	f, err := os.Create(cmd.output)
+	f, err := os.Create(cmd.xmlOutput)
 	if err != nil {
 		return err
 	}
@@ -51,22 +52,29 @@ func (cmd *Cmd) encodeXML(class *engine.Class) ([]byte, error) {
 }
 
 func (cmd *Cmd) compile() (*engine.Class, error) {
-	f, err := os.Open(cmd.source)
+	src, err := os.Open(cmd.source)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer src.Close()
 
-	compiler, err := engine.New(tokenizer.New(f))
+	out, err := os.Create(cmd.vmOutput)
+	if err != nil {
+		return nil, err
+	}
+	defer out.Close()
+
+	compiler, err := engine.New(tokenizer.New(src), out)
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Printf("Compiling %s\n", cmd.source)
 	return compiler.CompileClass()
 }
 
-func New(source, output string) *Cmd {
-	return &Cmd{source, output}
+func New(source, xmlOutput, vmOutput string) *Cmd {
+	return &Cmd{source, xmlOutput, vmOutput}
 }
 
 func (cmd *Cmd) Run() (err error) {
@@ -112,9 +120,10 @@ func main() {
 		}
 
 		if strings.HasSuffix(info.Name(), extJack) {
-			output := fmt.Sprintf("%s.xml", path[0:len(path)-len(extJack)])
+			xmlOutput := fmt.Sprintf("%s.xml", path[0:len(path)-len(extJack)])
+			vmOutput := fmt.Sprintf("%s.vm", path[0:len(path)-len(extJack)])
 
-			cmd := New(path, output)
+			cmd := New(path, xmlOutput, vmOutput)
 			if err := cmd.Run(); err != nil {
 				log.Fatal(err)
 			}

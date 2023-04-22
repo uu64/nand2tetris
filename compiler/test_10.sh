@@ -4,7 +4,7 @@ check_tokenizer() {
     echo "../projects/10/${1}/${2}.jack"
     test -e "../projects/10/${1}/${2}T.xml" && rm "../projects/10/${1}/${2}T.xml"
     ./JackTokenizer "../projects/10/${1}/${2}.jack"
-    diff -uw "./cmd/tokenizer/data/${1}/${2}T.xml" "../projects/10/${1}/${2}T.xml"
+    diff -uw "./cmd/tokenizer/data/10/${1}/${2}T.xml" "../projects/10/${1}/${2}T.xml"
     echo "pass"
 }
 
@@ -13,7 +13,7 @@ check_compiler() {
     test -e "../projects/10/${1}/${2}.xml" && rm "../projects/10/${1}/${2}.xml"
     ./JackCompiler "../projects/10/${1}/"
     # replace: <tag>{new line}{indent}</tag> -> <tag></tag>
-    diff -uw  <(gsed -z -E "s#<([a-zA-Z]+)>\r?\n\s+</([a-zA-Z]+)>#<\1></\2>#g" "./cmd/compiler/data/${1}/${2}.xml") "../projects/10/${1}/${2}.xml"
+    diff -uw  <(gsed -z -E "s#<([a-zA-Z]+)>\r?\n\s+</([a-zA-Z]+)>#<\1></\2>#g" "./cmd/compiler/data/10/${1}/${2}.xml") "../projects/10/${1}/${2}.xml"
     echo "pass"
 }
 
