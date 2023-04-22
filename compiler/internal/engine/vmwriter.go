@@ -31,8 +31,30 @@ func (c *Compiler) writeOp(op Op) error {
 		return c.codewriter.WriteCall("Math.multiply", 2)
 	case '/':
 		return c.codewriter.WriteCall("Math.divide", 2)
+	case '&':
+		return c.codewriter.WriteArithmetic(vmwriter.And)
+	case '|':
+		return c.codewriter.WriteArithmetic(vmwriter.Or)
+	case '<':
+		return c.codewriter.WriteArithmetic(vmwriter.LT)
+	case '>':
+		return c.codewriter.WriteArithmetic(vmwriter.GT)
+	case '=':
+		return c.codewriter.WriteArithmetic(vmwriter.EQ)
 	default:
-		return fmt.Errorf("writeOp: undefined op %s", string(tk.Val()))
+		panic(fmt.Sprintf("writeOp: undefined op %s", string(tk.Val())))
+	}
+}
+
+func (c *Compiler) writeUnaryOp(op UnaryOp) error {
+	tk := tokenizer.Symbol(op)
+	switch tk.Val() {
+	case '-':
+		return c.codewriter.WriteArithmetic(vmwriter.Neg)
+	case '~':
+		return c.codewriter.WriteArithmetic(vmwriter.Not)
+	default:
+		panic(fmt.Sprintf("writeUnaryOp: undefined op %s", string(tk.Val())))
 	}
 }
 

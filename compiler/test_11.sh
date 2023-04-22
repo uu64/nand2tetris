@@ -33,6 +33,6 @@ EOF
 
 check_compiler "Seven" "Main"
 
-# check_compiler "ConvertToBin" "Main"
+check_compiler "ConvertToBin" "Main"
 
 echo "finish."

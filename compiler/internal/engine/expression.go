@@ -187,7 +187,8 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 
 		// unaryOp term
 		case tokenizer.SymMinus, tokenizer.SymTilde:
-			term.Tokens = append(term.Tokens, UnaryOp(*s))
+			op := UnaryOp(*s)
+			term.Tokens = append(term.Tokens, op)
 			if err := c.tokenizer.Advance(); err != nil {
 				return nil, fmt.Errorf("compileTerm: %w", err)
 			}
@@ -198,6 +199,7 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 			}
 			term.Tokens = append(term.Tokens, t)
 
+			c.writeUnaryOp(op)
 		default:
 			return nil, fmt.Errorf("CompileTerm: invalid symbol %s", s)
 		}
