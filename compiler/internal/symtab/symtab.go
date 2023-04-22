@@ -48,8 +48,6 @@ func (sa symbolAttr) String() string {
 }
 
 type Symtab struct {
-	ClassName       string
-	SubroutineName  string
 	classTable      map[string]symbolAttr
 	subroutineTable map[string]symbolAttr
 	indexTable      map[SymbolKind]int
@@ -57,7 +55,6 @@ type Symtab struct {
 
 func New() *Symtab {
 	return &Symtab{
-		ClassName:       "",
 		classTable:      make(map[string]symbolAttr),
 		subroutineTable: make(map[string]symbolAttr),
 		indexTable: map[SymbolKind]int{

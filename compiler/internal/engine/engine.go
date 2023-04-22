@@ -9,7 +9,14 @@ import (
 	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
+type CompileContext struct {
+	ClassName      string
+	SubroutineName string
+	SubroutineKwd  *tokenizer.Keyword
+}
+
 type Compiler struct {
+	ctx        *CompileContext
 	tokenizer  *tokenizer.Tokenizer
 	symtab     *symtab.Symtab
 	codewriter *vmwriter.VMWriter
@@ -20,7 +27,9 @@ func New(t *tokenizer.Tokenizer, f io.Writer) (*Compiler, error) {
 		return nil, fmt.Errorf("CompileClass: %w", err)
 	}
 
+	var ctx CompileContext
 	return &Compiler{
+		ctx:        &ctx,
 		tokenizer:  t,
 		symtab:     symtab.New(),
 		codewriter: vmwriter.New(f),

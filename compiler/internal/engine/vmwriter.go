@@ -7,16 +7,16 @@ import (
 	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
-func (c *Compiler) writeFunction(kwd *tokenizer.Keyword, name *tokenizer.Identifier, nLocals int) error {
-	switch kwd.Label {
+func (c *Compiler) writeFunction(kwd, name string, nLocals int) error {
+	switch kwd {
 	case "constructor":
-		return c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.symtab.ClassName, name.Label), nLocals)
+		return c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.ctx.ClassName, name), nLocals)
 	case "function":
-		return c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.symtab.ClassName, name.Label), nLocals)
+		return c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.ctx.ClassName, name), nLocals)
 	case "method":
-		return c.codewriter.WriteFunction(name.Label, nLocals)
+		return c.codewriter.WriteFunction(name, nLocals)
 	default:
-		return fmt.Errorf("writeFunction: unexpected keyword %s", kwd.Label)
+		return fmt.Errorf("writeFunction: unexpected keyword %s", kwd)
 	}
 }
 

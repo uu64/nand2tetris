@@ -57,6 +57,7 @@ func (el SubroutineBody) ElementType() tokenizer.ElementType {
 type VarDec struct {
 	XMLName xml.Name `xml:"varDec"`
 	Tokens  []tokenizer.Element
+	Len     int `xml:"-"`
 }
 
 func (el VarDec) ElementType() tokenizer.ElementType {
@@ -83,7 +84,8 @@ func (c *Compiler) CompileClass() (*Class, error) {
 		return nil, fmt.Errorf("CompileClass: %w", err)
 	}
 	class.Tokens = append(class.Tokens, className)
-	c.symtab.ClassName = className.Val()
+
+	c.ctx.ClassName = className.Val()
 	className.Kind = symtab.SkNone.String()
 	className.Category = symtab.SkClass.String()
 	className.Index = -1
@@ -179,7 +181,7 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	subroutineDec := &SubroutineDec{Tokens: []tokenizer.Element{}}
 	c.symtab.StartSubroutine()
-	c.defineSymbol(&tokenizer.Identifier{Label: "this"}, "this", c.symtab.ClassName, symtab.SkArg)
+	c.defineSymbol(&tokenizer.Identifier{Label: "this"}, "this", c.ctx.ClassName, symtab.SkArg)
 
 	// ('constructor' | 'function' | 'method')
 	kwd, err := c.consumeKeyword(tokenizer.KwdConstructor, tokenizer.KwdFunction, tokenizer.KwdMethod)
@@ -188,6 +190,7 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	} else {
 		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 	}
+	c.ctx.SubroutineKwd = kwd
 
 	// ('void' | type)
 	isVoid := false
@@ -210,8 +213,8 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: %w", err)
 	}
+	c.ctx.SubroutineName = subroutineName.Val()
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineName)
-	c.symtab.SubroutineName = subroutineName.Val()
 	subroutineName.Kind = symtab.SkNone.String()
 	subroutineName.Category = symtab.SkSubroutine.String()
 	subroutineName.Index = -1
@@ -238,8 +241,6 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 		return nil, fmt.Errorf("CompileSubroutineDec: symbol ')' is missing, got %v", c.tokenizer.Current)
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, close)
-
-	c.writeFunction(kwd, subroutineName, paramList.Len)
 
 	// subroutineBody
 	subroutineBody, err := c.CompileSubroutineBody()
@@ -323,6 +324,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	subroutineBody.Tokens = append(subroutineBody.Tokens, open)
 
 	// varDec*
+	nLocals := 0
 	for {
 		if kwd, err := c.tokenizer.Keyword(); !(err == nil && kwd.Val() == tokenizer.KwdVar) {
 			break
@@ -332,7 +334,11 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 			return nil, fmt.Errorf("CompileSubroutineBody: %w", err)
 		}
 		subroutineBody.Tokens = append(subroutineBody.Tokens, varDec)
+		nLocals += varDec.Len
 	}
+
+	// TODO: 呼び出し場所違う
+	c.writeFunction(c.ctx.SubroutineKwd.Label, c.ctx.SubroutineName, nLocals)
 
 	// statements
 	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()
@@ -353,7 +359,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 }
 
 func (c *Compiler) CompileVarDec() (*VarDec, error) {
-	varDec := &VarDec{Tokens: []tokenizer.Element{}}
+	varDec := &VarDec{Tokens: []tokenizer.Element{}, Len: 0}
 
 	// 'var'
 	kwd, err := c.consumeKeyword(tokenizer.KwdVar)
@@ -378,6 +384,7 @@ func (c *Compiler) CompileVarDec() (*VarDec, error) {
 		}
 		varDec.Tokens = append(varDec.Tokens, varName)
 		c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.SkVar)
+		varDec.Len += 1
 
 		// check additional varName
 		s, err := c.consumeSymbol(tokenizer.SymComma, tokenizer.SymSemiColon)
@@ -425,12 +432,12 @@ func (c *Compiler) compileName() (*tokenizer.Identifier, error) {
 		id.Index = c.symtab.IndexOf(name)
 		id.IsDefined = false
 	} else {
-		if name == c.symtab.ClassName {
+		if name == c.ctx.ClassName {
 			id.Kind = kind.String()
 			id.Category = symtab.SkClass.String()
 			id.Index = c.symtab.IndexOf(name)
 			id.IsDefined = false
-		} else if name == c.symtab.SubroutineName {
+		} else if name == c.ctx.SubroutineName {
 			id.Kind = kind.String()
 			id.Category = symtab.SkSubroutine.String()
 			id.Index = c.symtab.IndexOf(name)
