@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
+	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
 type Statements struct {
@@ -247,12 +248,17 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 	statement := WhileStatement{Tokens: []tokenizer.Element{}}
 
+	startLabel := fmt.Sprintf("WHILE_EXP%d", c.ctx.WhileIndex)
+	endLabel := fmt.Sprintf("WHILE_END%d", c.ctx.WhileIndex)
+	c.ctx.WhileIndex += 1
+
 	// 'while'
 	kwd, err := c.consumeKeyword(tokenizer.KwdWhile)
 	if err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: whileStatement should start with WHILE, got %v", c.tokenizer.Current)
 	}
 	statement.Tokens = append(statement.Tokens, kwd)
+	c.codewriter.WriteLabel(startLabel)
 
 	// '('
 	if open, err := c.consumeSymbol(tokenizer.SymLeftParenthesis); err != nil {
@@ -275,6 +281,9 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 		statement.Tokens = append(statement.Tokens, close)
 	}
 
+	c.codewriter.WriteArithmetic(vmwriter.Not)
+	c.codewriter.WriteIf(endLabel)
+
 	// '{'
 	if open, err := c.consumeSymbol(tokenizer.SymLeftCurlyBracket); err != nil {
 		return nil, fmt.Errorf("compileWhileStatement: symbol '{' is missing, got %v", c.tokenizer.Current)
@@ -296,6 +305,9 @@ func (c *Compiler) compileWhileStatement() (*WhileStatement, error) {
 	} else {
 		statement.Tokens = append(statement.Tokens, close)
 	}
+
+	c.codewriter.WriteGoTo(startLabel)
+	c.codewriter.WriteLabel(endLabel)
 
 	return &statement, nil
 }

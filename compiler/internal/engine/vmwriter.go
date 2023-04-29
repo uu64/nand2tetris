@@ -71,19 +71,19 @@ func (c *Compiler) writePushKeyword(b *tokenizer.Keyword) error {
 	switch b.Val() {
 	case tokenizer.KwdTrue:
 		if err := c.codewriter.WritePush(vmwriter.Const, 0); err != nil {
-			return fmt.Errorf("WritePushBool: %w", err)
+			return fmt.Errorf("WritePushKeyword: %w", err)
 		}
 		if err := c.codewriter.WriteArithmetic(vmwriter.Not); err != nil {
-			return fmt.Errorf("WritePushBool: %w", err)
+			return fmt.Errorf("WritePushKeyword: %w", err)
 		}
 		return nil
 	case tokenizer.KwdFalse, tokenizer.KwdNull:
 		if err := c.codewriter.WritePush(vmwriter.Const, 0); err != nil {
-			return fmt.Errorf("WritePushBool: %w", err)
+			return fmt.Errorf("WritePushKeyword: %w", err)
 		}
 		return nil
 	default:
-		return fmt.Errorf("WritePushBool: invalid keyword %s", b.Label)
+		return fmt.Errorf("WritePushKeyword: invalid keyword %s", b.Label)
 	}
 }
 

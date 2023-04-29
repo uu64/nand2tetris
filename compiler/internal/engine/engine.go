@@ -13,6 +13,8 @@ type CompileContext struct {
 	ClassName      string
 	SubroutineName string
 	SubroutineKwd  *tokenizer.Keyword
+	WhileIndex     int
+	IfIndex        int
 }
 
 type Compiler struct {

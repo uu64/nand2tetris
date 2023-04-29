@@ -179,7 +179,11 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	subroutineDec := &SubroutineDec{Tokens: []tokenizer.Element{}}
 	c.symtab.StartSubroutine()
-	c.defineSymbol(&tokenizer.Identifier{Label: "this"}, "this", c.ctx.ClassName, symtab.SkArg)
+	c.ctx.WhileIndex = 0
+	c.ctx.IfIndex = 0
+
+	// TODO: methodの場合だけ追加する
+	// c.defineSymbol(&tokenizer.Identifier{Label: "this"}, "this", c.ctx.ClassName, symtab.SkArg)
 
 	// ('constructor' | 'function' | 'method')
 	kwd, err := c.consumeKeyword(tokenizer.KwdConstructor, tokenizer.KwdFunction, tokenizer.KwdMethod)
