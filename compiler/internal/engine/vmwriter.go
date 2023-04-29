@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 
+	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
 	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
@@ -64,6 +65,64 @@ func (c *Compiler) writeCall(name string, nArgs int) {
 
 func (c *Compiler) writePushIntConst(n int) {
 	c.codewriter.WritePush(vmwriter.Const, n)
+}
+
+func (c *Compiler) writePushKeyword(b *tokenizer.Keyword) error {
+	switch b.Val() {
+	case tokenizer.KwdTrue:
+		if err := c.codewriter.WritePush(vmwriter.Const, 0); err != nil {
+			return fmt.Errorf("WritePushBool: %w", err)
+		}
+		if err := c.codewriter.WriteArithmetic(vmwriter.Not); err != nil {
+			return fmt.Errorf("WritePushBool: %w", err)
+		}
+		return nil
+	case tokenizer.KwdFalse, tokenizer.KwdNull:
+		if err := c.codewriter.WritePush(vmwriter.Const, 0); err != nil {
+			return fmt.Errorf("WritePushBool: %w", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("WritePushBool: invalid keyword %s", b.Label)
+	}
+}
+
+func (c *Compiler) writePushVar(id tokenizer.Identifier) error {
+	var seg vmwriter.SegmentType
+	switch c.symtab.KindOf(id.Label) {
+	case symtab.SkStatic, symtab.SkField:
+		seg = vmwriter.This
+	case symtab.SkArg:
+		seg = vmwriter.Arg
+	case symtab.SkVar:
+		seg = vmwriter.Local
+	default:
+		return fmt.Errorf("WritePushVar: undefined id %s", id.Label)
+	}
+
+	if err := c.codewriter.WritePush(seg, c.symtab.IndexOf(id.Label)); err != nil {
+		return fmt.Errorf("WritePushVar: %w", err)
+	}
+	return nil
+}
+
+func (c *Compiler) writePopVar(id tokenizer.Identifier) error {
+	var seg vmwriter.SegmentType
+	switch c.symtab.KindOf(id.Label) {
+	case symtab.SkStatic, symtab.SkField:
+		seg = vmwriter.This
+	case symtab.SkArg:
+		seg = vmwriter.Arg
+	case symtab.SkVar:
+		seg = vmwriter.Local
+	default:
+		return fmt.Errorf("WritePopVar: undefined id %s", id.Label)
+	}
+
+	if err := c.codewriter.WritePop(seg, c.symtab.IndexOf(id.Label)); err != nil {
+		return fmt.Errorf("WritePopVar: %w", err)
+	}
+	return nil
 }
 
 func (c *Compiler) writeReturn(isVoid bool) {

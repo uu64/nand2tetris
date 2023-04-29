@@ -165,6 +165,10 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, end)
 
+	if err := c.writePopVar(*varName); err != nil {
+		return nil, fmt.Errorf("compileLetStatement: %w", err)
+	}
+
 	return &statement, nil
 }
 

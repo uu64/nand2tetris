@@ -116,6 +116,9 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		// ignore the error because it is already checked that the token type is STRING_CONST
 		v, _ := c.tokenizer.StringVal()
 		term.Tokens = append(term.Tokens, v)
+
+		// TODO: pushする
+
 		return &term, c.tokenizer.Advance()
 
 	// keywordConstant
@@ -125,6 +128,9 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 			return nil, fmt.Errorf("CompileTerm: invalid keyword %s", kwd)
 		}
 		term.Tokens = append(term.Tokens, kwd)
+		if err := c.writePushKeyword(kwd); err != nil {
+			return nil, fmt.Errorf("CompileTerm: %w", err)
+		}
 
 	// varName | varName '[' expression ']' | subroutineCall
 	// subroutineCall: subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
@@ -158,6 +164,9 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 				return nil, fmt.Errorf("compileTerm: %w", err)
 			}
 			term.Tokens = append(term.Tokens, name)
+			if err := c.writePushVar(*name); err != nil {
+				return nil, fmt.Errorf("compileTerm: %w", err)
+			}
 		}
 
 	// '(' expression ')' | unaryOp term
