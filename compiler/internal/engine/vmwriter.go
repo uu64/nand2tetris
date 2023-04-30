@@ -82,6 +82,11 @@ func (c *Compiler) writePushKeyword(b *tokenizer.Keyword) error {
 			return fmt.Errorf("WritePushKeyword: %w", err)
 		}
 		return nil
+	case tokenizer.KwdThis:
+		if err := c.codewriter.WritePush(vmwriter.Pointer, 0); err != nil {
+			return fmt.Errorf("WritePushKeyword: %w", err)
+		}
+		return nil
 	default:
 		return fmt.Errorf("WritePushKeyword: invalid keyword %s", b.Label)
 	}
@@ -104,6 +109,10 @@ func (c *Compiler) writePushVar(id tokenizer.Identifier) error {
 		return fmt.Errorf("WritePushVar: %w", err)
 	}
 	return nil
+}
+
+func (c *Compiler) writePopPointer(index int) {
+	c.codewriter.WritePop(vmwriter.Pointer, index)
 }
 
 func (c *Compiler) writePopVar(id tokenizer.Identifier) error {

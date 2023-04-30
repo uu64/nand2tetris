@@ -35,4 +35,8 @@ check_compiler "Seven" "Main"
 
 check_compiler "ConvertToBin" "Main"
 
+check_compiler "Square" "Main"
+check_compiler "Square" "Square"
+check_compiler "Square" "SquareGame"
+
 echo "finish."

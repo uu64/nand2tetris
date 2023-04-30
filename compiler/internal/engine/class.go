@@ -159,6 +159,7 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 		classVarDec.Tokens = append(classVarDec.Tokens, varName)
 
 		c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.KwdToKind(kwd))
+		c.ctx.ClassVarCount += 1
 
 		// check additional varName
 		s, err := c.consumeSymbol(tokenizer.SymComma, tokenizer.SymSemiColon)
@@ -181,16 +182,20 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	c.symtab.StartSubroutine()
 	c.ctx.StartSubroutine()
 
-	// TODO: methodの場合だけ追加する
-	// c.defineSymbol(&tokenizer.Identifier{Label: "this"}, "this", c.ctx.ClassName, symtab.SkArg)
-
 	// ('constructor' | 'function' | 'method')
 	kwd, err := c.consumeKeyword(tokenizer.KwdConstructor, tokenizer.KwdFunction, tokenizer.KwdMethod)
 	if err != nil {
 		return nil, fmt.Errorf("CompileSubroutineDec: classVarDec should start with CONSTRUCTOR or FUNCTION or METHOD, got %v", c.tokenizer.Current)
-	} else {
-		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 	}
+	switch kwd.Val() {
+	case tokenizer.KwdConstructor:
+		// do nothing
+	case tokenizer.KwdFunction:
+		// do nothing
+	case tokenizer.KwdMethod:
+		c.defineSymbol(&tokenizer.Identifier{Label: "this"}, "this", c.ctx.ClassName, symtab.SkArg)
+	}
+	subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 	c.ctx.SubroutineKwd = kwd
 
 	// ('void' | type)
@@ -333,6 +338,11 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 	}
 
 	c.writeFunction(c.ctx.SubroutineKwd.Label, c.ctx.SubroutineName, c.symtab.VarCount(symtab.SkVar))
+	if c.ctx.SubroutineKwd.Val() == tokenizer.KwdConstructor {
+		c.writePushIntConst(c.ctx.ClassVarCount)
+		c.writeCall("Memory.alloc", 1)
+		c.writePopPointer(0)
+	}
 
 	// statements
 	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()

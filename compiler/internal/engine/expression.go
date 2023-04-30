@@ -311,7 +311,6 @@ func (c *Compiler) CompileSubroutineCall() ([]tokenizer.Element, error) {
 		name.IsDefined = false
 		name.Category = symtab.SkClass.String()
 
-		// NOTE: このappendいる？
 		tokens = append(tokens, s)
 
 		if err := c.tokenizer.Advance(); err != nil {
@@ -333,7 +332,12 @@ func (c *Compiler) CompileSubroutineCall() ([]tokenizer.Element, error) {
 			return nil, err
 		}
 
-		c.writeCall(fmt.Sprintf("%s.%s", name.Label, id.Label), list.Len)
+		if c.symtab.KindOf(name.Label).String() == "none" {
+			c.writeCall(fmt.Sprintf("%s.%s", name.Label, id.Label), list.Len)
+		} else {
+			c.writePushVar(*name)
+			c.writeCall(fmt.Sprintf("%s.%s", c.symtab.TypeOf(name.Label), id.Label), list.Len+1)
+		}
 	default:
 		return nil, fmt.Errorf("compileSubroutineCall: '(' or '.' is expected, got %s", s)
 	}
