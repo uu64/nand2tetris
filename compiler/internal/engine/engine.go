@@ -10,11 +10,18 @@ import (
 )
 
 type CompileContext struct {
-	ClassName      string
-	SubroutineName string
-	SubroutineKwd  *tokenizer.Keyword
-	WhileIndex     int
-	IfIndex        int
+	ClassName        string
+	SubroutineName   string
+	SubroutineKwd    *tokenizer.Keyword
+	SubroutineIsVoid bool
+	WhileIndex       int
+	IfIndex          int
+}
+
+func (ctx *CompileContext) StartSubroutine() {
+	ctx.SubroutineIsVoid = false
+	ctx.WhileIndex = 0
+	ctx.IfIndex = 0
 }
 
 type Compiler struct {

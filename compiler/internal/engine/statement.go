@@ -176,6 +176,11 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 	statement := IfStatement{Tokens: []tokenizer.Element{}}
 
+	trueLabel := fmt.Sprintf("IF_TRUE%d", c.ctx.IfIndex)
+	falseLabel := fmt.Sprintf("IF_FALSE%d", c.ctx.IfIndex)
+	endLabel := fmt.Sprintf("IF_END%d", c.ctx.IfIndex)
+	c.ctx.IfIndex += 1
+
 	// 'if'
 	kwd, err := c.consumeKeyword(tokenizer.KwdIf)
 	if err != nil {
@@ -203,6 +208,10 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 		return nil, fmt.Errorf("compileIfStatement: symbol ')' is missing, got %v", c.tokenizer.Current)
 	}
 	statement.Tokens = append(statement.Tokens, close)
+
+	c.codewriter.WriteIf(trueLabel)
+	c.codewriter.WriteGoTo(falseLabel)
+	c.codewriter.WriteLabel(trueLabel)
 
 	consumeStatements := func() error {
 		// '{'
@@ -233,6 +242,9 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 		return nil, err
 	}
 
+	c.codewriter.WriteGoTo(endLabel)
+	c.codewriter.WriteLabel(falseLabel)
+
 	// 'else'
 	if kwd, err := c.consumeKeyword(tokenizer.KwdElse); err == nil {
 		statement.Tokens = append(statement.Tokens, kwd)
@@ -241,6 +253,8 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 			return nil, err
 		}
 	}
+
+	c.codewriter.WriteLabel(endLabel)
 
 	return &statement, nil
 }
@@ -365,6 +379,8 @@ func (c *Compiler) compileReturnStatement() (*ReturnStatement, error) {
 	} else {
 		statement.Tokens = append(statement.Tokens, end)
 	}
+
+	c.writeReturn()
 
 	return &statement, nil
 }

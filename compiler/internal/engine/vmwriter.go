@@ -125,8 +125,8 @@ func (c *Compiler) writePopVar(id tokenizer.Identifier) error {
 	return nil
 }
 
-func (c *Compiler) writeReturn(isVoid bool) {
-	if isVoid {
+func (c *Compiler) writeReturn() {
+	if c.ctx.SubroutineIsVoid {
 		c.codewriter.WritePush(vmwriter.Const, 0)
 	}
 	c.codewriter.WriteReturn()

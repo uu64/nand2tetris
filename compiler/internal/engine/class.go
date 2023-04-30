@@ -179,8 +179,7 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	subroutineDec := &SubroutineDec{Tokens: []tokenizer.Element{}}
 	c.symtab.StartSubroutine()
-	c.ctx.WhileIndex = 0
-	c.ctx.IfIndex = 0
+	c.ctx.StartSubroutine()
 
 	// TODO: methodの場合だけ追加する
 	// c.defineSymbol(&tokenizer.Identifier{Label: "this"}, "this", c.ctx.ClassName, symtab.SkArg)
@@ -195,9 +194,8 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	c.ctx.SubroutineKwd = kwd
 
 	// ('void' | type)
-	isVoid := false
 	if kwd, err := c.tokenizer.Keyword(); err == nil && kwd.Val() == tokenizer.KwdVoid {
-		isVoid = true
+		c.ctx.SubroutineIsVoid = true
 		subroutineDec.Tokens = append(subroutineDec.Tokens, kwd)
 		if err := c.tokenizer.Advance(); err != nil {
 			return nil, err
@@ -251,7 +249,6 @@ func (c *Compiler) CompileSubroutineDec() (*SubroutineDec, error) {
 	}
 	subroutineDec.Tokens = append(subroutineDec.Tokens, subroutineBody)
 
-	c.writeReturn(isVoid)
 	return subroutineDec, nil
 }
 
