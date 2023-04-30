@@ -11,7 +11,6 @@ import (
 
 type CompileContext struct {
 	ClassName        string
-	ClassVarCount    int
 	SubroutineName   string
 	SubroutineKwd    *tokenizer.Keyword
 	SubroutineIsVoid bool

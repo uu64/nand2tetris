@@ -17,7 +17,7 @@ func (c *Compiler) writeFuncWithCtx() error {
 		if err != nil {
 			return fmt.Errorf("writeFunction: %w", err)
 		}
-		c.writePushIntConst(c.ctx.ClassVarCount)
+		c.writePushIntConst(c.symtab.VarCount(symtab.SkField))
 		c.writeCall("Memory.alloc", 1)
 		c.writePopPointer(0)
 		return nil
@@ -126,7 +126,9 @@ func (c *Compiler) writePushTemp(index int) {
 func (c *Compiler) writePushVar(id tokenizer.Identifier) error {
 	var seg vmwriter.SegmentType
 	switch c.symtab.KindOf(id.Label) {
-	case symtab.SkStatic, symtab.SkField:
+	case symtab.SkStatic:
+		seg = vmwriter.Static
+	case symtab.SkField:
 		seg = vmwriter.This
 	case symtab.SkArg:
 		seg = vmwriter.Arg
@@ -153,7 +155,9 @@ func (c *Compiler) writePopTemp(index int) {
 func (c *Compiler) writePopVar(id tokenizer.Identifier) error {
 	var seg vmwriter.SegmentType
 	switch c.symtab.KindOf(id.Label) {
-	case symtab.SkStatic, symtab.SkField:
+	case symtab.SkStatic:
+		seg = vmwriter.Static
+	case symtab.SkField:
 		seg = vmwriter.This
 	case symtab.SkArg:
 		seg = vmwriter.Arg

@@ -41,4 +41,9 @@ check_compiler "Square" "SquareGame"
 
 check_compiler "Average" "Main"
 
+check_compiler "Pong" "Main"
+check_compiler "Pong" "Ball"
+check_compiler "Pong" "Bat"
+check_compiler "Pong" "PongGame"
+
 echo "finish."

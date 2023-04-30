@@ -312,12 +312,12 @@ func (c *Compiler) CompileSubroutineCall() ([]tokenizer.Element, error) {
 		name.Category = symtab.SkSubroutine.String()
 
 		// '(' expressionList ')'
+		c.writePushPointer(0)
 		list, err := consumeExpressionList()
 		if err != nil {
 			return nil, err
 		}
 
-		c.writePushPointer(0)
 		c.writeCall(fmt.Sprintf("%s.%s", c.ctx.ClassName, name.Label), list.Len+1)
 	case tokenizer.SymDot:
 		name.IsDefined = false
@@ -339,17 +339,23 @@ func (c *Compiler) CompileSubroutineCall() ([]tokenizer.Element, error) {
 		name.Category = symtab.SkClass.String()
 
 		// '(' expressionList ')'
-		list, err := consumeExpressionList()
-		if err != nil {
-			return nil, err
-		}
-
 		if c.symtab.KindOf(name.Label).String() == "none" {
+			list, err := consumeExpressionList()
+			if err != nil {
+				return nil, fmt.Errorf("compileSubroutineCall: %w", err)
+			}
+
 			c.writeCall(fmt.Sprintf("%s.%s", name.Label, id.Label), list.Len)
 		} else {
 			if err := c.writePushVar(*name); err != nil {
 				return nil, fmt.Errorf("compileSubroutineCall: %w", err)
 			}
+
+			list, err := consumeExpressionList()
+			if err != nil {
+				return nil, fmt.Errorf("compileSubroutineCall: %w", err)
+			}
+
 			c.writeCall(fmt.Sprintf("%s.%s", c.symtab.TypeOf(name.Label), id.Label), list.Len+1)
 		}
 	default:

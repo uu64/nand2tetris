@@ -157,9 +157,7 @@ func (c *Compiler) CompileClassVarDec() (*ClassVarDec, error) {
 			return nil, fmt.Errorf("CompileClassVarDec: %w", err)
 		}
 		classVarDec.Tokens = append(classVarDec.Tokens, varName)
-
 		c.defineSymbol(varName, varName.Label, symtab.ElmToTyp(typ), symtab.KwdToKind(kwd))
-		c.ctx.ClassVarCount += 1
 
 		// check additional varName
 		s, err := c.consumeSymbol(tokenizer.SymComma, tokenizer.SymSemiColon)
