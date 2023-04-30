@@ -6,6 +6,7 @@ import (
 
 	"github.com/uu64/nand2tetris/compiler/internal/symtab"
 	"github.com/uu64/nand2tetris/compiler/internal/tokenizer"
+	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
 type Expression struct {
@@ -117,7 +118,12 @@ func (c *Compiler) CompileTerm() (*Term, error) {
 		v, _ := c.tokenizer.StringVal()
 		term.Tokens = append(term.Tokens, v)
 
-		// TODO: pushする
+		c.writePushIntConst(len(v.Label))
+		c.writeCall("String.new", 1)
+		for _, r := range v.Label {
+			c.writePushIntConst(int(r))
+			c.writeCall("String.appendChar", 2)
+		}
 
 		return &term, c.tokenizer.Advance()
 
@@ -250,6 +256,11 @@ func (c *Compiler) CompileArrayDec() ([]tokenizer.Element, error) {
 	} else {
 		tokens = append(tokens, close)
 	}
+
+	c.writePushVar(*name)
+	c.codewriter.WriteArithmetic(vmwriter.Add)
+	c.writePopPointer(1)
+	c.codewriter.WritePush(vmwriter.That, 0)
 
 	return tokens, nil
 }

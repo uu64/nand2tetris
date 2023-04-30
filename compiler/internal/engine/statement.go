@@ -125,8 +125,11 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, varName)
 
+	isArray := false
 	// ('[' expression ']')?
 	if open, err := c.consumeSymbol(tokenizer.SymLeftSquareBracket); err == nil {
+		isArray = true
+
 		// '['
 		statement.Tokens = append(statement.Tokens, open)
 
@@ -143,6 +146,10 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 			return nil, fmt.Errorf("compileLetStatement: symbol ']' is missing, got %v", c.tokenizer.Current)
 		}
 		statement.Tokens = append(statement.Tokens, close)
+
+		// write vm code for array
+		c.writePushVar(*varName)
+		c.codewriter.WriteArithmetic(vmwriter.Add)
 	}
 
 	// '='
@@ -166,8 +173,19 @@ func (c *Compiler) compileLetStatement() (*LetStatement, error) {
 	}
 	statement.Tokens = append(statement.Tokens, end)
 
-	if err := c.writePopVar(*varName); err != nil {
-		return nil, fmt.Errorf("compileLetStatement: %w", err)
+	if isArray {
+		// save the result of the expression
+		c.writePopTemp(0)
+		// save the memory address of the reference to the array
+		c.writePopPointer(1)
+		// restore the saved result and push it onto the stack
+		c.writePushTemp(0)
+		// assign a value to the memory addredss of the reference to array
+		c.codewriter.WritePop(vmwriter.That, 0)
+	} else {
+		if err := c.writePopVar(*varName); err != nil {
+			return nil, fmt.Errorf("compileLetStatement: %w", err)
+		}
 	}
 
 	return &statement, nil

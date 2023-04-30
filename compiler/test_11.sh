@@ -39,4 +39,6 @@ check_compiler "Square" "Main"
 check_compiler "Square" "Square"
 check_compiler "Square" "SquareGame"
 
+check_compiler "Average" "Main"
+
 echo "finish."

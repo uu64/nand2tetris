@@ -119,6 +119,10 @@ func (c *Compiler) writePushPointer(index int) {
 	c.codewriter.WritePush(vmwriter.Pointer, index)
 }
 
+func (c *Compiler) writePushTemp(index int) {
+	c.codewriter.WritePush(vmwriter.Temp, index)
+}
+
 func (c *Compiler) writePushVar(id tokenizer.Identifier) error {
 	var seg vmwriter.SegmentType
 	switch c.symtab.KindOf(id.Label) {
@@ -140,6 +144,10 @@ func (c *Compiler) writePushVar(id tokenizer.Identifier) error {
 
 func (c *Compiler) writePopPointer(index int) {
 	c.codewriter.WritePop(vmwriter.Pointer, index)
+}
+
+func (c *Compiler) writePopTemp(index int) {
+	c.codewriter.WritePop(vmwriter.Temp, index)
 }
 
 func (c *Compiler) writePopVar(id tokenizer.Identifier) error {
