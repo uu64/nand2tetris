@@ -46,4 +46,6 @@ check_compiler "Pong" "Ball"
 check_compiler "Pong" "Bat"
 check_compiler "Pong" "PongGame"
 
+check_compiler "ComplexArrays" "Main"
+
 echo "finish."
