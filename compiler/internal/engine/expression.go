@@ -306,7 +306,8 @@ func (c *Compiler) CompileSubroutineCall() ([]tokenizer.Element, error) {
 			return nil, err
 		}
 
-		c.writeCall(name.Label, list.Len)
+		c.writePushPointer(0)
+		c.writeCall(fmt.Sprintf("%s.%s", c.ctx.ClassName, name.Label), list.Len+1)
 	case tokenizer.SymDot:
 		name.IsDefined = false
 		name.Category = symtab.SkClass.String()
@@ -335,7 +336,9 @@ func (c *Compiler) CompileSubroutineCall() ([]tokenizer.Element, error) {
 		if c.symtab.KindOf(name.Label).String() == "none" {
 			c.writeCall(fmt.Sprintf("%s.%s", name.Label, id.Label), list.Len)
 		} else {
-			c.writePushVar(*name)
+			if err := c.writePushVar(*name); err != nil {
+				return nil, fmt.Errorf("compileSubroutineCall: %w", err)
+			}
 			c.writeCall(fmt.Sprintf("%s.%s", c.symtab.TypeOf(name.Label), id.Label), list.Len+1)
 		}
 	default:

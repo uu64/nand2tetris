@@ -336,13 +336,7 @@ func (c *Compiler) CompileSubroutineBody() (*SubroutineBody, error) {
 		}
 		subroutineBody.Tokens = append(subroutineBody.Tokens, varDec)
 	}
-
-	c.writeFunction(c.ctx.SubroutineKwd.Label, c.ctx.SubroutineName, c.symtab.VarCount(symtab.SkVar))
-	if c.ctx.SubroutineKwd.Val() == tokenizer.KwdConstructor {
-		c.writePushIntConst(c.ctx.ClassVarCount)
-		c.writeCall("Memory.alloc", 1)
-		c.writePopPointer(0)
-	}
+	c.writeFuncWithCtx()
 
 	// statements
 	// NOTE: You don't need to call Advance() because Advance() is already called inside CompileStatements()

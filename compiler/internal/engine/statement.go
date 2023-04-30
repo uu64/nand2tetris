@@ -242,19 +242,20 @@ func (c *Compiler) compileIfStatement() (*IfStatement, error) {
 		return nil, err
 	}
 
-	c.codewriter.WriteGoTo(endLabel)
-	c.codewriter.WriteLabel(falseLabel)
-
 	// 'else'
 	if kwd, err := c.consumeKeyword(tokenizer.KwdElse); err == nil {
-		statement.Tokens = append(statement.Tokens, kwd)
+		c.codewriter.WriteGoTo(endLabel)
+		c.codewriter.WriteLabel(falseLabel)
 
+		statement.Tokens = append(statement.Tokens, kwd)
 		if err := consumeStatements(); err != nil {
 			return nil, err
 		}
-	}
 
-	c.codewriter.WriteLabel(endLabel)
+		c.codewriter.WriteLabel(endLabel)
+	} else {
+		c.codewriter.WriteLabel(falseLabel)
+	}
 
 	return &statement, nil
 }

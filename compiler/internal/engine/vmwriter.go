@@ -8,14 +8,33 @@ import (
 	"github.com/uu64/nand2tetris/compiler/internal/vmwriter"
 )
 
-func (c *Compiler) writeFunction(kwd, name string, nLocals int) error {
+func (c *Compiler) writeFuncWithCtx() error {
+	kwd := c.ctx.SubroutineKwd.Label
+	nLocals := c.symtab.VarCount(symtab.SkVar)
 	switch kwd {
 	case "constructor":
-		return c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.ctx.ClassName, name), nLocals)
-	case "function":
-		return c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.ctx.ClassName, name), nLocals)
+		err := c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.ctx.ClassName, c.ctx.SubroutineName), nLocals)
+		if err != nil {
+			return fmt.Errorf("writeFunction: %w", err)
+		}
+		c.writePushIntConst(c.ctx.ClassVarCount)
+		c.writeCall("Memory.alloc", 1)
+		c.writePopPointer(0)
+		return nil
 	case "method":
-		return c.codewriter.WriteFunction(name, nLocals)
+		err := c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.ctx.ClassName, c.ctx.SubroutineName), nLocals)
+		if err != nil {
+			return fmt.Errorf("writeFunction: %w", err)
+		}
+		c.writePushArgument(0)
+		c.writePopPointer(0)
+		return nil
+	case "function":
+		err := c.codewriter.WriteFunction(fmt.Sprintf("%s.%s", c.ctx.ClassName, c.ctx.SubroutineName), nLocals)
+		if err != nil {
+			return fmt.Errorf("writeFunction: %w", err)
+		}
+		return nil
 	default:
 		return fmt.Errorf("writeFunction: unexpected keyword %s", kwd)
 	}
@@ -90,6 +109,14 @@ func (c *Compiler) writePushKeyword(b *tokenizer.Keyword) error {
 	default:
 		return fmt.Errorf("WritePushKeyword: invalid keyword %s", b.Label)
 	}
+}
+
+func (c *Compiler) writePushArgument(index int) {
+	c.codewriter.WritePush(vmwriter.Arg, index)
+}
+
+func (c *Compiler) writePushPointer(index int) {
+	c.codewriter.WritePush(vmwriter.Pointer, index)
 }
 
 func (c *Compiler) writePushVar(id tokenizer.Identifier) error {
