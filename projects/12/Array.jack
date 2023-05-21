@@ -12,12 +12,17 @@
  * data types.
  */
 class Array {
+    field int ptr;
 
     /** Constructs a new Array of the given size. */
     function Array new(int size) {
+        let ptr = Memory.alloc(size);
+        return ptr;
     }
 
     /** Disposes this array. */
     method void dispose() {
+        do Memory.deAlloc(ptr);
+        return;
     }
 }
