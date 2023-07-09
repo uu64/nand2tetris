@@ -67,6 +67,11 @@ class Math {
      */
     function int divide(int x, int y) {
         var int absX, absY, result;
+
+        if (y = 0) {
+            do Sys.error(3);
+        }
+
         let absX = Math.abs(x);
         let absY = Math.abs(y);
         let result = Math.divideAbs(absX, absY);
@@ -103,6 +108,10 @@ class Math {
         let y = 0;
         // 0 <= x < 2^(15/2)
         let j = 7; // 15/2
+
+        if (x < 0) {
+            do Sys.error(4);
+        }
 
         while (j > -1) {
             let tmp = Math.multiply(y + twoToThe[j], y + twoToThe[j]);
