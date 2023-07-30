@@ -33,7 +33,7 @@ class String {
     /** Disposes this string. */
     method void dispose() {
         if (maxLen > 0) {
-            do Array.dispose(s);
+            do s.dispose();
         }
         do Memory.deAlloc(this);
         return;
@@ -83,37 +83,71 @@ class String {
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
-        var int i, v, d;
-        let i = 0;
-        let v = 0;
-        while (i < maxLen) {
-            if (s[i] < 48 | s[i] > 57) {
-                return v;
-            }
-            let d = s[i] - 48;
-            let v = v*10 + d;
-        }
-        return v;
+        return string2Int();
     }
 
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
-        // var int n, c, lastDigit, mod;
-        // let n = val;
+        var int tmp, i;
+        let i = 0;
+        let tmp = 1;
+        while (i < maxLen) {
+            let tmp = tmp * 10;
+            let i = i + 1;
+        }
+        if (val > (tmp-1)) {
+            do Sys.error(19);
+        }
 
-        // while (~(n < 10)) {
-        //     let mod = n;
-        //     while (~(mod < 10)) {
-        //         let mod = mod - 10;
-        //     }
-        //     let lastDigit = mod; 
-        //     let c = lastDigit + 48;
-
-        // }
-        // if (len = 0) {
-        //     Sys.error(19);
-        // }
+        let len = 0;
+        if (val < 0) {
+            do appendChar(45); // 45: -
+        }
+        do int2String(Math.abs(val));
         return;
+    }
+
+    method void int2String(int n) {
+        var int c, lastDigit;
+        var string s, tmp;
+
+        let lastDigit = n;
+        while (lastDigit > 9) {
+            let lastDigit = lastDigit - 10;
+        }
+
+        let c = lastDigit + 48;
+        if (n < 10) {
+            do appendChar(c);
+            return;
+        }
+        do int2String(n/10);
+        do appendChar(c);
+        return;
+    }
+
+    method int string2Int() {
+        var int i, v, d;
+        var boolean isNeg;
+        let i = 0;
+        let v = 0;
+
+        let isNeg = s[0] = 45; // 45: -
+        if (isNeg) {
+            let i = 1;
+        }
+
+        while (i < maxLen) {
+            let d = s[i] - 48;
+            let v = v*10 + d;
+            let i = i + 1;
+        }
+
+        if (isNeg) {
+            let v = -1 * v;
+        }
+
+        return v;
     }
 
     /** Returns the new line character. */
