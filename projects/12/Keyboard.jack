@@ -92,7 +92,7 @@ class Keyboard {
      * entered text is detected). Also handles user backspaces. 
      */
     function int readInt(String message) {
-        var int c;
+        var int c, num;
         var String s;
 
         do Output.printString(message);
@@ -102,7 +102,10 @@ class Keyboard {
             // 128: new line
             if (c = 128) {
                 do Output.println();
-                return s;
+
+                let num = s.intValue();
+                do s.dispose();
+                return num;
             // 129: back space
             } else { 
                 if (c = 129) {
@@ -113,6 +116,7 @@ class Keyboard {
                 }
             }
         }
-        return s.intValue();
+
+        return -1;
     }
 }
