@@ -1,16 +1,16 @@
 #!/bin/bash
 
 function deploy() {
-    cp "${1}.jack" "${1}Test/"
-    # cp ../../tools/OS/* "${1}Test/"
-    ../../tools/JackCompiler.sh "${1}Test/"
+    cp "${1}.jack" "${2}/"
+    ../../tools/JackCompiler.sh "${2}/"
 }
 
-deploy "Array"
-deploy "Keyboard"
-deploy "Math"
-# deploy "Memory"
-deploy "Output"
-deploy "Screen"
-deploy "String"
-deploy "Sys"
+deploy "Array" "ArrayTest"
+deploy "Keyboard" "KeyboardTest"
+deploy "Math" "MathTest"
+deploy "Memory" "MemoryTest"
+# deploy "Memory" "MemoryTest/MemoryDiag"
+deploy "Output" "OutputTest"
+deploy "Screen" "ScreenTest"
+deploy "String" "StringTest"
+deploy "Sys" "SysTest"
