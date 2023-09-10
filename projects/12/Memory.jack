@@ -9,11 +9,17 @@
  * consists of 32,768 words, each holding a 16-bit binary number.
  */ 
 class Memory {
-    static int free;
+    static int baseAddr, heapMin, heapMax;
 
     /** Initializes the class. */
     function void init() {
-        let free = 2048;
+        var Array memory;
+        let heapMin = 2048;
+        let heapMax = 16383;
+
+        let baseAddr = heapMin;
+        do Memory.poke(baseAddr, heapMax - heapMin + 1); 
+        do Memory.poke(baseAddr + 1, 0); 
         return;
     }
 
@@ -35,15 +41,58 @@ class Memory {
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
-        var int pointer;
-        let pointer = free;
-        let free = free + size;
-        return pointer;
+        var int prev, next, retAddr, blockSize, required;
+        if (size < 0) {
+            do Sys.error(5);
+        }
+        let required = size + 1;
+
+        let next = baseAddr;
+        while (~(next = 0)) {
+            if (next > heapMax) {
+                do Sys.error(6);
+            }
+
+            let blockSize = Memory.peek(next);
+            if ((blockSize - required) > -1) {
+                do Memory.poke(next, required);
+                let retAddr = next + 1;
+
+                // update current block
+                if (blockSize = required) {
+                    if (prev = 0) {
+                        let baseAddr = Memory.peek(next + 1);
+                    } else {
+                        do Memory.poke(prev + 1, Memory.peek(next + 1));
+                    }
+                } else {
+                    let next = next + required;
+                    if (prev = 0) {
+                        let baseAddr = next;
+                    } else {
+                        do Memory.poke(prev + 1, next);
+                    }
+                    do Memory.poke(next, blockSize - required);
+                    do Memory.poke(next + 1, Memory.peek(retAddr));
+                }
+
+                return retAddr;
+            }
+            let prev = next;
+            let next = Memory.peek(next + 1);
+        }
+
+        do Sys.error(22);
+        return -1;
     }
 
    /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
+        var int addr, size;
+        let addr = o - 1;
+        do Memory.poke(addr + 1, baseAddr);
+        let baseAddr = addr;
         return;
     }    
 }
