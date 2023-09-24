@@ -77,6 +77,55 @@ class Screen {
         return;
     }
 
+    function void batchDrawLine(int x1, int x2, int y) {
+        var int tmp, v, address, bitnumX1, bitnumX2, startX1, startX2, row, col, bitnum;
+
+        let row = y*32;
+        let startX1 = Math.min(x1, x2)/16;
+        let bitnumX1 = Math.min(x1, x2) - (16*startX1);
+        let startX2 = Math.max(x1, x2)/16;
+        let bitnumX2 = Math.max(x1, x2) - (16*startX2);
+
+
+        if (~(bitnumX1 = 0)) {
+            let address = row + startX1 + addressOffset;
+            let tmp = Memory.peek(address);
+            let v = ~(twoToThe[bitnumX1] - 1);
+            if (color) {
+                do Memory.poke(address, tmp | v);
+            } else {
+                do Memory.poke(address, tmp & ~v);
+            }
+            let startX1 = startX1 + 1;
+        }
+
+        if (~(bitnumX2 = 15)) {
+            let address = row + startX2 + addressOffset;
+            let tmp = Memory.peek(address);
+            let v = twoToThe[bitnumX2 + 1] - 1;
+            if (color) {
+                do Memory.poke(address, tmp | v);
+            } else {
+                do Memory.poke(address, tmp & ~v);
+            }
+            let startX2 = startX2 - 1;
+        }
+
+        let col = startX1;
+        while (col < (startX2 + 1)) {
+            let address = row + col + addressOffset;
+            let v = -1;
+            if (color) {
+                do Memory.poke(address, v);
+            } else{
+                do Memory.poke(address, ~v);
+            }
+            let col = col + 1;
+        }
+
+        return;
+    }
+
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
         var int a, b, dx, dy, adyMinusbdx;
@@ -85,6 +134,11 @@ class Screen {
         let dx = x2 - x1;
         let dy = y2 - y1;
         let adyMinusbdx = 0;
+
+        if ((dy = 0) & (Math.abs(dx) > 15)) {
+            do Screen.batchDrawLine(x1, x2, y1);
+            return;
+        }
 
         while ((Math.abs(a) < (Math.abs(dx)+1)) & (Math.abs(b) < (Math.abs(dy)+1))) {
             do Screen.drawPixel(x1+a, y1+b);
@@ -114,7 +168,8 @@ class Screen {
         var int y;
         let y = y1;
         while (y < (y2+1)) {
-            do Screen.drawLine(x1, y, x2, y);
+            // do Screen.drawLine(x1, y, x2, y);
+            do Screen.batchDrawLine(x1, x2, y);
             let y = y + 1;
         }
         return;
