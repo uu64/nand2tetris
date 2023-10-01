@@ -89,51 +89,51 @@ class Screen {
     }
 
     function void batchDrawLine(int x1, int x2, int y) {
-        var int tmp, v, address, bitnumX1, bitnumX2, startX1, startX2, row, col, bitnum;
+        var int tmp, v, address, modX1, modX2, divX1, divX2, row, col, mod;
 
         let row = y*32;
-        let startX1 = Math.min(x1, x2)/16;
-        let bitnumX1 = Math.min(x1, x2) - (16*startX1);
-        let startX2 = Math.max(x1, x2)/16;
-        let bitnumX2 = Math.max(x1, x2) - (16*startX2);
+        let divX1 = Math.min(x1, x2)/16;
+        let modX1 = Math.min(x1, x2) - (16*divX1);
+        let divX2 = Math.max(x1, x2)/16;
+        let modX2 = Math.max(x1, x2) - (16*divX2);
 
-        if (startX1 = startX2) {
-            let address = row + startX1 + addressOffset;
+        if (divX1 = divX2) {
+            let address = row + divX1 + addressOffset;
             let tmp = Memory.peek(address);
 
-            let v = ~(twoToThe[bitnumX1] - 1) & twoToThe[bitnumX2 + 1] - 1;
+            let v = ~(twoToThe[modX1] - 1) & twoToThe[modX2 + 1] - 1;
             if (color) {
                 do Memory.poke(address, tmp | v);
             } else {
                 do Memory.poke(address, tmp & ~v);
             }
         } else{
-            if (~(bitnumX1 = 0)) {
-                let address = row + startX1 + addressOffset;
+            if (~(modX1 = 0)) {
+                let address = row + divX1 + addressOffset;
                 let tmp = Memory.peek(address);
-                let v = ~(twoToThe[bitnumX1] - 1);
+                let v = ~(twoToThe[modX1] - 1);
                 if (color) {
                     do Memory.poke(address, tmp | v);
                 } else {
                     do Memory.poke(address, tmp & ~v);
                 }
-                let startX1 = startX1 + 1;
+                let divX1 = divX1 + 1;
             }
 
-            if (~(bitnumX2 = 15)) {
-                let address = row + startX2 + addressOffset;
+            if (~(modX2 = 15)) {
+                let address = row + divX2 + addressOffset;
                 let tmp = Memory.peek(address);
-                let v = twoToThe[bitnumX2 + 1] - 1;
+                let v = twoToThe[modX2 + 1] - 1;
                 if (color) {
                     do Memory.poke(address, tmp | v);
                 } else {
                     do Memory.poke(address, tmp & ~v);
                 }
-                let startX2 = startX2 - 1;
+                let divX2 = divX2 - 1;
             }
 
-            let col = startX1;
-            while (col < (startX2 + 1)) {
+            let col = divX1;
+            while (col < (divX2 + 1)) {
                 let address = row + col + addressOffset;
                 let v = -1;
                 if (color) {
