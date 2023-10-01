@@ -37,17 +37,28 @@ class Screen {
 
     /** Erases the entire screen. */
     function void clearScreen() {
-        var int i, j;
-        let i = 0;
-        while (i < height) {
-            let j = 0;
-            while (j < width) {
-                do Memory.poke(i+j+addressOffset, 0);
-                let j = j + 16;
-            }
+        var Array memory;
+        var int i;
+        let memory = 0;
+        let i = addressOffset;
+
+        while (i < 24576) {
+            let memory[i] = 0;
             let i = i + 1;
         }
         return;
+        
+        // var int i, j;
+        // let i = 0;
+        // while (i < height) {
+        //     let j = 0;
+        //     while (j < width) {
+        //         do Memory.poke(i+j+addressOffset, 0);
+        //         let j = j + 16;
+        //     }
+        //     let i = i + 1;
+        // }
+        // return;
     }
 
     /** Sets the current color, to be used for all subsequent drawXXX commands.
@@ -86,41 +97,52 @@ class Screen {
         let startX2 = Math.max(x1, x2)/16;
         let bitnumX2 = Math.max(x1, x2) - (16*startX2);
 
-
-        if (~(bitnumX1 = 0)) {
+        if (startX1 = startX2) {
             let address = row + startX1 + addressOffset;
             let tmp = Memory.peek(address);
-            let v = ~(twoToThe[bitnumX1] - 1);
+
+            let v = ~(twoToThe[bitnumX1] - 1) & twoToThe[bitnumX2 + 1] - 1;
             if (color) {
                 do Memory.poke(address, tmp | v);
             } else {
                 do Memory.poke(address, tmp & ~v);
             }
-            let startX1 = startX1 + 1;
-        }
-
-        if (~(bitnumX2 = 15)) {
-            let address = row + startX2 + addressOffset;
-            let tmp = Memory.peek(address);
-            let v = twoToThe[bitnumX2 + 1] - 1;
-            if (color) {
-                do Memory.poke(address, tmp | v);
-            } else {
-                do Memory.poke(address, tmp & ~v);
+        } else{
+            if (~(bitnumX1 = 0)) {
+                let address = row + startX1 + addressOffset;
+                let tmp = Memory.peek(address);
+                let v = ~(twoToThe[bitnumX1] - 1);
+                if (color) {
+                    do Memory.poke(address, tmp | v);
+                } else {
+                    do Memory.poke(address, tmp & ~v);
+                }
+                let startX1 = startX1 + 1;
             }
-            let startX2 = startX2 - 1;
-        }
 
-        let col = startX1;
-        while (col < (startX2 + 1)) {
-            let address = row + col + addressOffset;
-            let v = -1;
-            if (color) {
-                do Memory.poke(address, v);
-            } else{
-                do Memory.poke(address, ~v);
+            if (~(bitnumX2 = 15)) {
+                let address = row + startX2 + addressOffset;
+                let tmp = Memory.peek(address);
+                let v = twoToThe[bitnumX2 + 1] - 1;
+                if (color) {
+                    do Memory.poke(address, tmp | v);
+                } else {
+                    do Memory.poke(address, tmp & ~v);
+                }
+                let startX2 = startX2 - 1;
             }
-            let col = col + 1;
+
+            let col = startX1;
+            while (col < (startX2 + 1)) {
+                let address = row + col + addressOffset;
+                let v = -1;
+                if (color) {
+                    do Memory.poke(address, v);
+                } else{
+                    do Memory.poke(address, ~v);
+                }
+                let col = col + 1;
+            }
         }
 
         return;
